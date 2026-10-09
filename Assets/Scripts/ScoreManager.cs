@@ -21,6 +21,18 @@ public class ScoreManager : MonoBehaviour
 
     public string PlayerName => GameSettings.PlayerName;
 
+    /// <summary>Résultat d'une flèche : ses points, centre ou non, ratée ou non.</summary>
+    public struct Shot
+    {
+        public int points;
+        public bool bullseye;
+        public bool miss;
+    }
+
+    /// <summary>Les flèches tirées dans une manche (index 0 = manche 1), dans l'ordre.</summary>
+    public IReadOnlyList<Shot> ShotsOfRound(int roundIndex) =>
+        roundIndex >= 0 && roundIndex < roundShots.Count ? roundShots[roundIndex] : (IReadOnlyList<Shot>)Array.Empty<Shot>();
+
     /// <summary>Scores de toutes les manches (y compris celle en cours).</summary>
     public IReadOnlyList<int> RoundScores => roundScores;
     public int RoundNumber => roundScores.Count;                  // 1 = première manche
@@ -46,6 +58,7 @@ public class ScoreManager : MonoBehaviour
     public event Action<int, int> OnRoundEnded;
 
     readonly List<int> roundScores = new();
+    readonly List<List<Shot>> roundShots = new();
     int arrowsInFlight;
 
     void Awake()
@@ -72,6 +85,7 @@ public class ScoreManager : MonoBehaviour
     public void StartNextRound()
     {
         roundScores.Add(0);
+        roundShots.Add(new List<Shot>());
         ArrowsShotThisRound = 0;
         arrowsInFlight = 0;
         IsRoundOver = false;
@@ -121,6 +135,7 @@ public class ScoreManager : MonoBehaviour
         Hits++;
         if (bullseye) Bullseyes++;
         roundScores[^1] += points;
+        roundShots[^1].Add(new Shot { points = points, bullseye = bullseye });
         TotalScore += points;
 
         Debug.Log($"[Score] {PlayerName} : +{points} → {RoundScore}/{targetScore} pts (flèches restantes : {ArrowsLeft})");
@@ -132,6 +147,7 @@ public class ScoreManager : MonoBehaviour
     {
         if (IsRoundOver) return;
         arrowsInFlight = Mathf.Max(0, arrowsInFlight - 1);
+        roundShots[^1].Add(new Shot { miss = true });
 
         Debug.Log($"[Score] Raté → {RoundScore}/{targetScore} pts (flèches restantes : {ArrowsLeft})");
         OnScoreChanged?.Invoke();
@@ -142,6 +158,7 @@ public class ScoreManager : MonoBehaviour
     public void ResetGame()
     {
         roundScores.Clear();
+        roundShots.Clear();
         TotalScore = ArrowsShot = Hits = Bullseyes = 0;
         StartNextRound();
     }

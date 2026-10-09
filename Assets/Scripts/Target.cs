@@ -139,12 +139,5 @@ public class Target : MonoBehaviour
         Destroy(go);
     }
 
-    static Color PointsColor(int points, bool bullseye)
-    {
-        if (bullseye) return new Color(1f, 0.84f, 0f);          // or
-        if (points >= 8) return new Color(1f, 0.35f, 0.25f);    // rouge vif
-        if (points >= 4) return new Color(0.45f, 0.85f, 1f);    // bleu clair
-        if (points > 0) return Color.white;
-        return new Color(0.6f, 0.6f, 0.6f);                     // gris
-    }
+    static Color PointsColor(int points, bool bullseye) => WoodUI.ShotColor(points, bullseye);
 }

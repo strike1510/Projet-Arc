@@ -205,8 +205,18 @@ public class ScoreBoard : MonoBehaviour
                 color, TextAlignmentOptions.Right, FontStyles.Bold);
             y -= 70;
 
+            // Une pastille par flèche, colorée selon l'anneau touché (gris = ratée, vide = pas tirée)
+            WoodUI.ShotDots(content, sm.ShotsOfRound(i), sm.arrowsPerRound, y - 26, 46f, 14f);
+            y -= 62;
+
             if (last) Details(sm, ref y);
         }
+
+        // Légende des couleurs des pastilles
+        WoodUI.NewImage(content, "Fond légende", new Vector2(0, y - 30), new Vector2(inner, 56), null,
+            new Color(0.15f, 0.08f, 0.03f, 0.55f));
+        WoodUI.ShotLegend(content, y - 30, inner - 20, 32f, 30f);
+        y -= 72;
 
         // Total si plusieurs manches
         if (sm.RoundScores.Count > 1)
@@ -225,7 +235,7 @@ public class ScoreBoard : MonoBehaviour
             y -= 10;
             string msg = sm.TargetReached ? "Objectif atteint !" : "Plus de flèches !";
             WoodUI.NewText(content, $"Manche {sm.RoundNumber} terminée\n<size=80%>{msg}</size>", new Vector2(0, y - 45),
-                new Vector2(inner, 90), 40, WoodUI.Gold);
+                new Vector2(inner, 90), 46, WoodUI.Gold);
             y -= 105;
             WoodUI.NewButton(content, "Manche suivante", new Vector2(-170, y - 40), new Vector2(320, 80), 36,
                 buttonSprite, () => ScoreManager.Instance.StartNextRound());
@@ -242,9 +252,9 @@ public class ScoreBoard : MonoBehaviour
         const float inner = W - 2 * Pad;
 
         WoodUI.NewText(content, $"Flèches : {sm.ArrowsLeft} / {sm.arrowsPerRound}", new Vector2(0, y - 22),
-            new Vector2(inner, 44), 32, WoodUI.Cream * 0.9f, TextAlignmentOptions.Left);
+            new Vector2(inner, 44), 36, WoodUI.Cream * 0.9f, TextAlignmentOptions.Left);
         WoodUI.NewText(content, $"Objectif : {Mathf.Min(sm.RoundScore, sm.targetScore)} / {sm.targetScore}",
-            new Vector2(0, y - 22), new Vector2(inner, 44), 32, WoodUI.Cream * 0.9f, TextAlignmentOptions.Right);
+            new Vector2(0, y - 22), new Vector2(inner, 44), 36, WoodUI.Cream * 0.9f, TextAlignmentOptions.Right);
         y -= 52;
 
         // Barre de progression vers l'objectif
