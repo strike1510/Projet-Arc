@@ -7,11 +7,14 @@ public class ArrowController : MonoBehaviour
 {
     public Transform grabPoint;   // arrière de la flèche (encoche)
     public Transform tip;         // pointe
-    public BowController bow;
+
+    [HideInInspector] public BowController bow;   // trouvé automatiquement au moment du nock
 
     Rigidbody rb;
     XRGrabInteractable grab;
     bool nocked;
+    bool flying;    // true entre le tir et le premier choc
+    bool stuck;     // true quand la flèche est plantée
     float draw;
 
     void Awake()
@@ -20,29 +23,30 @@ public class ArrowController : MonoBehaviour
         grab = GetComponent<XRGrabInteractable>();
         grab.attachTransform = grabPoint;
         grab.movementType = XRBaseInteractable.MovementType.Kinematic;
+        grab.throwOnDetach = false;   // évite l'avertissement "kinematic Rigidbody"
+        grab.selectEntered.AddListener(OnGrab);
         grab.selectExited.AddListener(OnRelease);
+    }
+
+    // Flèche reprise en main (même plantée)
+    void OnGrab(SelectEnterEventArgs args)
+    {
+        flying = false;
+        stuck = false;
     }
 
     void Update()
     {
         if (!grab.isSelected) return;
 
-        Vector3 rest = bow.arrowNock.position;
-        Vector3 dir  = bow.arrowNock.forward;
-
         if (!nocked)
         {
-            if (Vector3.Distance(grabPoint.position, rest) < bow.nockDistance)
-            {
-                nocked = true;
-                bow.nockedArrow = this;
-                grab.trackPosition = false;
-                grab.trackRotation = false;
-                grab.throwOnDetach = false;
-            }
+            TryNock();
             return;
         }
 
+        Vector3 rest = bow.arrowNock.position;
+        Vector3 dir  = bow.arrowNock.forward;
         Vector3 hand = grab.firstInteractorSelecting.GetAttachTransform(grab).position;
         draw = Mathf.Clamp(Vector3.Dot(rest - hand, dir), 0f, bow.maxDraw);
 
@@ -52,6 +56,23 @@ public class ArrowController : MonoBehaviour
 
         // place l'arrière de la flèche au point de tension
         transform.position += (rest - dir * draw) - grabPoint.position;
+    }
+
+    // Cherche un arc libre dont l'encoche est assez proche
+    void TryNock()
+    {
+        foreach (var b in BowController.All)
+        {
+            if (b.nockedArrow != null && b.nockedArrow != this) continue;
+            if (Vector3.Distance(grabPoint.position, b.arrowNock.position) >= b.nockDistance) continue;
+
+            bow = b;
+            nocked = true;
+            bow.nockedArrow = this;
+            grab.trackPosition = false;
+            grab.trackRotation = false;
+            return;
+        }
     }
 
     void OnRelease(SelectExitEventArgs args)
@@ -74,12 +95,13 @@ public class ArrowController : MonoBehaviour
         rb.isKinematic = false;
         rb.useGravity = true;
         rb.linearVelocity = dir * speed;
+        flying = true;
     }
-    
+
     void FixedUpdate()
     {
-        // Ne fait rien si la flèche est immobile ou encore tenue
-        if (rb.isKinematic || rb.linearVelocity.sqrMagnitude < 1f) return;
+        // Seulement en vol, et assez vite
+        if (!flying || rb.linearVelocity.sqrMagnitude < 1f) return;
 
         // La flèche suit progressivement sa trajectoire
         Vector3 axis = (tip.position - grabPoint.position).normalized;
@@ -96,17 +118,17 @@ public class ArrowController : MonoBehaviour
         );
     }
 
-    // Premier choc en vol : la flèche se plante
-    // sauf si elle touche l'arc
+    // Premier choc en vol : la flèche se plante, sauf si elle touche l'arc
     void OnCollisionEnter(Collision collision)
     {
-        // Si la flèche est encore kinematic, elle n'est pas en vol
-        if (rb.isKinematic) return;
+        if (!flying) return;
 
         // Ignore les collisions avec l'arc
-        if (collision.transform.IsChildOf(bow.transform)) return;
+        if (bow != null && collision.transform.IsChildOf(bow.transform)) return;
 
         // La flèche se plante
+        flying = false;
+        stuck = true;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.isKinematic = true;
@@ -114,7 +136,8 @@ public class ArrowController : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!grab.isSelected && rb.isKinematic)
+        // Flèche lâchée sans être tirée : elle redevient physique et tombe
+        if (!grab.isSelected && rb.isKinematic && !stuck)
         {
             rb.isKinematic = false;
             rb.useGravity = true;
