@@ -14,6 +14,8 @@ public class ArrowController : MonoBehaviour
     bool nocked;
     float draw;
 
+    bool scored;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -35,6 +37,11 @@ public class ArrowController : MonoBehaviour
             if (Vector3.Distance(grabPoint.position, rest) < bow.nockDistance)
             {
                 nocked = true;
+<<<<<<< Updated upstream
+=======
+                scored = false;
+                bow.nockedArrow = this;
+>>>>>>> Stashed changes
                 grab.trackPosition = false;
                 grab.trackRotation = false;
                 grab.throwOnDetach = false;
@@ -68,4 +75,63 @@ public class ArrowController : MonoBehaviour
         rb.useGravity = true;
         rb.linearVelocity = dir * speed;
     }
+<<<<<<< Updated upstream
+=======
+
+    void FixedUpdate()
+    {
+        // Ne fait rien si la flèche est immobile ou encore tenue
+        if (rb.isKinematic || rb.linearVelocity.sqrMagnitude < 1f) return;
+
+        // La flèche suit progressivement sa trajectoire
+        Vector3 axis = (tip.position - grabPoint.position).normalized;
+        Vector3 velocityDirection = rb.linearVelocity.normalized;
+
+        Quaternion turn = Quaternion.FromToRotation(axis, velocityDirection);
+
+        rb.MoveRotation(
+            Quaternion.Slerp(
+                rb.rotation,
+                turn * rb.rotation,
+                0.05f
+            )
+        );
+    }
+
+    // Premier choc en vol : la flèche se plante
+    // sauf si elle touche l'arc
+    void OnCollisionEnter(Collision collision)
+    {
+        // Si la flèche est encore kinematic, elle n'est pas en vol
+        if (rb.isKinematic) return;
+
+        // Ignore les collisions avec l'arc
+        if (collision.transform.IsChildOf(bow.transform)) return;
+
+        // Score si on touche un anneau de cible
+        if (!scored)
+        {
+            TargetRing ring = collision.collider.GetComponent<TargetRing>();
+            if (ring != null)
+            {
+                scored = true;
+                ScoreManager.Instance.AddPoints(ring.points);
+            }
+        }
+
+        // La flèche se plante
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = true;
+    }
+
+    void LateUpdate()
+    {
+        if (!grab.isSelected && rb.isKinematic)
+        {
+            rb.isKinematic = false;
+            rb.useGravity = true;
+        }
+    }
+>>>>>>> Stashed changes
 }

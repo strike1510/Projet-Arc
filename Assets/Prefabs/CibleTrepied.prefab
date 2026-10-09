@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 1355629649160305744}
   - component: {fileID: 8522709612866922707}
   - component: {fileID: 5021825910241142164}
-  - component: {fileID: 4339880213576697515}
+  - component: {fileID: 8296284684222624157}
+  - component: {fileID: 5122681981021056494}
   m_Layer: 0
   m_Name: disque2
   m_TagString: Untagged
@@ -91,8 +92,21 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &4339880213576697515
-CapsuleCollider:
+--- !u!114 &8296284684222624157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3877811797722311333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fc5790ecb8aee04596bd26412e3e9b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TargetRing
+  points: 30
+--- !u!64 &5122681981021056494
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -109,11 +123,10 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &4347911984955656321
 GameObject:
   m_ObjectHideFlags: 0
@@ -125,7 +138,8 @@ GameObject:
   - component: {fileID: 8809570172291682528}
   - component: {fileID: 871573324411425872}
   - component: {fileID: 7494082531839843371}
-  - component: {fileID: 3750217433319062887}
+  - component: {fileID: 4208216919105574681}
+  - component: {fileID: 1385754792163975}
   m_Layer: 0
   m_Name: disque4
   m_TagString: Untagged
@@ -205,8 +219,21 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &3750217433319062887
-CapsuleCollider:
+--- !u!114 &4208216919105574681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4347911984955656321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fc5790ecb8aee04596bd26412e3e9b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TargetRing
+  points: 50
+--- !u!64 &1385754792163975
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -223,11 +250,10 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &4372943508479634648
 GameObject:
   m_ObjectHideFlags: 0
@@ -239,7 +265,8 @@ GameObject:
   - component: {fileID: 916854605677705557}
   - component: {fileID: 4103842134997912775}
   - component: {fileID: 8662844377608771155}
-  - component: {fileID: 7619025881227750575}
+  - component: {fileID: 4169426263791434807}
+  - component: {fileID: 1483611526562100050}
   m_Layer: 0
   m_Name: disque0
   m_TagString: Untagged
@@ -319,8 +346,21 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &7619025881227750575
-CapsuleCollider:
+--- !u!114 &4169426263791434807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4372943508479634648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fc5790ecb8aee04596bd26412e3e9b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TargetRing
+  points: 10
+--- !u!64 &1483611526562100050
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -337,11 +377,10 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &5503517451205250539
 GameObject:
   m_ObjectHideFlags: 0
@@ -353,7 +392,8 @@ GameObject:
   - component: {fileID: 7549252396336979875}
   - component: {fileID: 4908478168256710750}
   - component: {fileID: 870823806820273157}
-  - component: {fileID: 4902161578501896285}
+  - component: {fileID: 5150503660225169876}
+  - component: {fileID: 8797226733729437524}
   m_Layer: 0
   m_Name: disque3
   m_TagString: Untagged
@@ -433,8 +473,21 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &4902161578501896285
-CapsuleCollider:
+--- !u!114 &5150503660225169876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5503517451205250539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fc5790ecb8aee04596bd26412e3e9b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TargetRing
+  points: 40
+--- !u!64 &8797226733729437524
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -451,11 +504,10 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &5569415101582745778
 GameObject:
   m_ObjectHideFlags: 0
@@ -467,7 +519,8 @@ GameObject:
   - component: {fileID: 7530109182162315468}
   - component: {fileID: 3724057587508553938}
   - component: {fileID: 8102770190471033604}
-  - component: {fileID: 1502645913935449870}
+  - component: {fileID: 4568112185651904620}
+  - component: {fileID: 7354407834080614299}
   m_Layer: 0
   m_Name: disque1
   m_TagString: Untagged
@@ -547,8 +600,21 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &1502645913935449870
-CapsuleCollider:
+--- !u!114 &4568112185651904620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5569415101582745778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fc5790ecb8aee04596bd26412e3e9b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TargetRing
+  points: 20
+--- !u!64 &7354407834080614299
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -565,11 +631,10 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &7171900742046145061
 GameObject:
   m_ObjectHideFlags: 0
@@ -581,7 +646,6 @@ GameObject:
   - component: {fileID: 7612408430528275905}
   - component: {fileID: 8946372483312209804}
   - component: {fileID: 7270764796203806463}
-  - component: {fileID: 1761662657908955511}
   m_Layer: 0
   m_Name: stick (2)
   m_TagString: Untagged
@@ -661,29 +725,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &1761662657908955511
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7171900742046145061}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
 --- !u!1 &8005263913861590949
 GameObject:
   m_ObjectHideFlags: 0
@@ -695,7 +736,6 @@ GameObject:
   - component: {fileID: 7869857507959977297}
   - component: {fileID: 2781506656909550304}
   - component: {fileID: 1645891439357039037}
-  - component: {fileID: 6694407290400300008}
   m_Layer: 0
   m_Name: stick (3)
   m_TagString: Untagged
@@ -775,29 +815,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &6694407290400300008
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8005263913861590949}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
 --- !u!1 &8053223765518721660
 GameObject:
   m_ObjectHideFlags: 0
@@ -848,7 +865,6 @@ GameObject:
   - component: {fileID: 6403197254919071876}
   - component: {fileID: 6697562534641799651}
   - component: {fileID: 7486231872867009865}
-  - component: {fileID: 5252700718718681743}
   m_Layer: 0
   m_Name: stick
   m_TagString: Untagged
@@ -928,26 +944,3 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &5252700718718681743
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8781299164340373999}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
