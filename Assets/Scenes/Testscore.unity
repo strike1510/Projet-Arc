@@ -957,6 +957,89 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.0024799032, y: 0.0064413217, z: 0.091822244}
   m_Center: {x: -0.0000000012762195, y: -8.105582e-10, z: 0.027197812}
+--- !u!1001 &781335765
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 8053223765518721660, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_Name
+      value: CibleTrepied
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9975641
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.06975647
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8554850143499088921, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 8
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8053223765518721660, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 781335767}
+  m_SourcePrefab: {fileID: 100100000, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+--- !u!1 &781335766 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8053223765518721660, guid: 297c70b55bfbcd241adf446ef44fd5fb, type: 3}
+  m_PrefabInstance: {fileID: 781335765}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &781335767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 781335766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9e2e0b37bba9534ab162896046a809f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Target
+  ringPoints: 020000000400000006000000080000000a000000i
+  ringPrefix: disque
+  showPopup: 1
+  popupDuration: 1.6
+  popupHeight: 0.35
+  popupSize: 0.7
 --- !u!1 &807687241
 GameObject:
   m_ObjectHideFlags: 0
@@ -2159,6 +2242,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2e072475227ca944b51060e159fdf03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ScoreManager
+  targetScore: 150
+  arrowsPerRound: 10
 --- !u!4 &1906291438
 Transform:
   m_ObjectHideFlags: 0
@@ -2188,6 +2273,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TestShooter
   arrow: {fileID: 0}
   speed: 30
+  compensateGravity: 1
 --- !u!4 &1939796573 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3628009608032985346, guid: 60c3b2f08b39ddc4fbd391095038b726, type: 3}
@@ -2230,6 +2316,54 @@ Transform:
   - {fileID: 956468580}
   - {fileID: 807687242}
   - {fileID: 1424547366}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2083788753
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2083788755}
+  - component: {fileID: 2083788754}
+  m_Layer: 0
+  m_Name: ScoreBoard
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2083788754
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2083788753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 549aee91631257a49b16e2c1de0478ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScoreBoard
+  facePlayer: 1
+  bobAmplitude: 0.03
+  bobSpeed: 1.1
+  swayDegrees: 1.2
+--- !u!4 &2083788755
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2083788753}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2, y: 3.7, z: -2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2085979400 stripped
@@ -2457,3 +2591,5 @@ SceneRoots:
   - {fileID: 1532703597}
   - {fileID: 1906291438}
   - {fileID: 279613868}
+  - {fileID: 781335765}
+  - {fileID: 2083788755}

@@ -25,6 +25,7 @@ public class ArrowHit : MonoBehaviour
     bool wasNocked;        // était encochée à la frame précédente
     bool flying;           // tirée et pas encore arrêtée
     bool stuck;            // plantée quelque part
+    bool counted;          // ce tir compte pour le score (false si la manche est finie)
     bool grabbedWhileStuck;
     float flightTime;
     Vector3 previousTip;
@@ -64,6 +65,7 @@ public class ArrowHit : MonoBehaviour
 
         if (flightTime > maxFlightTime || transform.position.y < -50f)
         {
+            Debug.Log("[ArrowHit] Flèche perdue (rien touché).");
             EndFlight(null);
             return;
         }
@@ -97,6 +99,8 @@ public class ArrowHit : MonoBehaviour
             if (closest == null || h.distance < closest.Value.distance) closest = h;
         }
 
+        // Trajectoire visible dans la vue Scene pendant 5 s (jaune = vol)
+        Debug.DrawLine(previousTip, end, Color.yellow, 5f);
         previousTip = tip;
 
         if (closest.HasValue) StickInto(closest.Value, dir);
@@ -109,6 +113,7 @@ public class ArrowHit : MonoBehaviour
     public void DebugLaunch(Vector3 origin, Vector3 dir, float speed)
     {
         if (grab.isSelected) return;
+        if (flying) EndFlight(null);   // relancée avant d'avoir touché : le tir précédent compte comme raté
 
         transform.SetParent(null, true);
         rb.isKinematic = false;
@@ -131,7 +136,8 @@ public class ArrowHit : MonoBehaviour
         previousTip = arrow.tip.position;
         transform.SetParent(null, true);
 
-        if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterShot();
+        counted = ScoreManager.Instance == null || ScoreManager.Instance.RegisterShot();
+        if (!counted) Debug.Log("[ArrowHit] Manche terminée : ce tir ne compte pas.");
     }
 
     void StickInto(RaycastHit hit, Vector3 dir)
@@ -147,12 +153,17 @@ public class ArrowHit : MonoBehaviour
         if (target != null) transform.SetParent(target.transform, true);   // suit la cible si elle bouge
 
         stuck = true;
+        if (target == null) Debug.Log($"[ArrowHit] Flèche plantée dans '{hit.collider.name}' (pas une cible).", hit.collider);
+        Debug.DrawLine(hit.point - dir * 0.3f, hit.point, target != null ? Color.green : Color.red, 10f);
         EndFlight(target, hit.point);
     }
 
     void EndFlight(Target target, Vector3 point = default)
     {
         flying = false;
+
+        if (!counted) return;
+        counted = false;
 
         if (target != null) target.OnArrowHit(point);
         else if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterMiss();
@@ -162,6 +173,7 @@ public class ArrowHit : MonoBehaviour
     {
         // Le joueur reprend la flèche (plantée ou en vol) : elle n'est plus en vol.
         grabbedWhileStuck = stuck || rb.isKinematic;
+        if (flying) EndFlight(null);   // rattrapée en plein vol : compte comme ratée
         flying = false;
         stuck = false;
         transform.SetParent(null, true);

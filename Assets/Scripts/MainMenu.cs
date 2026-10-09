@@ -171,7 +171,8 @@ public class MainMenu : MonoBehaviour
         canvas.renderMode = RenderMode.WorldSpace;
         canvas.worldCamera = Camera.main;
         canvasGO.AddComponent<CanvasScaler>().dynamicPixelsPerUnit = 10f;
-        canvasGO.AddComponent<TrackedDeviceGraphicRaycaster>();
+        canvasGO.AddComponent<TrackedDeviceGraphicRaycaster>();   // clics avec les manettes VR
+        canvasGO.AddComponent<GraphicRaycaster>();                // clics à la souris (tests sans casque)
 
         var rt = (RectTransform)canvasGO.transform;
         rt.sizeDelta = new Vector2(W, H);
