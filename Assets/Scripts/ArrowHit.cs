@@ -9,6 +9,9 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 /// - oriente la flèche dans le sens du vol
 /// - détecte l'impact par raycast (fiable même à 30 m/s), plante la flèche et donne les points
 /// </summary>
+// S'exécute après ArrowController : son LateUpdate remet la gravité aux flèches lâchées,
+// le nôtre (juste après) garde figée une flèche que NOUS avons plantée.
+[DefaultExecutionOrder(100)]
 [RequireComponent(typeof(ArrowController))]
 public class ArrowHit : MonoBehaviour
 {
@@ -27,6 +30,7 @@ public class ArrowHit : MonoBehaviour
     bool stuck;            // plantée quelque part
     bool counted;          // ce tir compte pour le score (false si la manche est finie)
     bool grabbedWhileStuck;
+    bool wasMoving;        // la flèche a déjà bougé depuis le tir (physique active)
     float flightTime;
     Vector3 previousTip;
 
@@ -55,9 +59,29 @@ public class ArrowHit : MonoBehaviour
         wasNocked = nocked;
     }
 
+    void LateUpdate()
+    {
+        // Une flèche plantée par notre raycast reste figée (ArrowController ne connaît que ses propres impacts)
+        if (stuck && !grab.isSelected && !rb.isKinematic)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+        }
+    }
+
     void FixedUpdate()
     {
-        if (!flying || rb.isKinematic) return;
+        if (!flying) return;
+
+        if (rb.isKinematic)
+        {
+            // Figée en plein vol par un autre script (ex. collision dans ArrowController) sans qu'on ait vu l'impact :
+            // on termine le tir pour ne pas bloquer la manche.
+            if (wasMoving && !grab.isSelected) EndFlight(null);
+            return;
+        }
+        wasMoving = true;
 
         flightTime += Time.fixedDeltaTime;
         Vector3 velocity = rb.linearVelocity;
@@ -132,6 +156,7 @@ public class ArrowHit : MonoBehaviour
     {
         flying = true;
         stuck = false;
+        wasMoving = false;
         flightTime = 0f;
         previousTip = arrow.tip.position;
         transform.SetParent(null, true);
@@ -167,6 +192,30 @@ public class ArrowHit : MonoBehaviour
 
         if (target != null) target.OnArrowHit(point);
         else if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterMiss();
+    }
+
+    /// <summary>
+    /// Filet de sécurité : si la physique fait toucher la flèche avant que le raycast ne voie l'impact,
+    /// on compte l'impact au point de contact.
+    /// </summary>
+    void OnCollisionEnter(Collision collision)
+    {
+        if (!flying || grab.isSelected) return;
+        if (collision.transform.IsChildOf(transform)) return;
+        if (arrow.bow != null && collision.transform.IsChildOf(arrow.bow.transform)) return;
+
+        Vector3 point = collision.contactCount > 0 ? collision.GetContact(0).point : arrow.tip.position;
+
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = true;
+
+        var target = collision.collider.GetComponentInParent<Target>();
+        if (target != null) transform.SetParent(target.transform, true);
+
+        stuck = true;
+        if (target == null) Debug.Log($"[ArrowHit] Flèche arrêtée par '{collision.collider.name}' (pas une cible).", collision.collider);
+        EndFlight(target, point);
     }
 
     void OnGrabbed(SelectEnterEventArgs args)
