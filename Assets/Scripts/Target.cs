@@ -18,7 +18,11 @@ public class Target : MonoBehaviour
 
     [Header("Popup de points")]
     public bool showPopup = true;
-    public float popupDuration = 1.2f;
+    public float popupDuration = 1.6f;
+    [Tooltip("Hauteur du texte au-dessus du bord de la cible (m).")]
+    public float popupHeight = 0.35f;
+    [Tooltip("Taille du texte par mètre de distance au joueur.")]
+    public float popupSize = 0.7f;
 
     // Anneaux triés du plus grand (extérieur) au plus petit (centre)
     readonly List<Transform> rings = new();
@@ -89,33 +93,58 @@ public class Target : MonoBehaviour
         if (showPopup) StartCoroutine(Popup(worldPoint, points, bullseye));
     }
 
-    IEnumerator Popup(Vector3 position, int points, bool bullseye)
+    IEnumerator Popup(Vector3 hitPoint, int points, bool bullseye)
     {
         var cam = Camera.main;
-        Vector3 toCam = cam ? (cam.transform.position - position).normalized : -transform.forward;
+        Transform outer = rings[0];
+        Vector3 center = outer.position;
+        float radius = 0.5f * outer.lossyScale.x;
+
+        // Au-dessus de la cible (pas dessus), légèrement vers le joueur
+        Vector3 toCam = cam ? (cam.transform.position - center).normalized : -transform.forward;
+        Vector3 start = center + Vector3.up * (radius + popupHeight) + toCam * 0.3f;
+
+        // Taille proportionnelle à la distance : même lisibilité à 5 m ou à 30 m
+        float distance = cam ? Vector3.Distance(cam.transform.position, start) : 10f;
+        float baseSize = Mathf.Max(2f, distance * popupSize);
 
         var go = new GameObject("Popup +" + points);
-        go.transform.position = position + toCam * 0.15f + Vector3.up * 0.1f;
+        go.transform.position = start;
 
         var text = go.AddComponent<TextMeshPro>();
-        text.text = bullseye ? $"+{points}\n<size=50%>EN PLEIN CENTRE !</size>" : $"+{points}";
-        text.fontSize = 3f;
+        text.text = bullseye ? $"+{points}\n<size=45%>EN PLEIN CENTRE !</size>" : points > 0 ? $"+{points}" : "0";
         text.fontStyle = FontStyles.Bold;
         text.alignment = TextAlignmentOptions.Center;
-        text.outlineWidth = 0.2f;
-        text.outlineColor = Color.black;
-        Color color = bullseye ? new Color(1f, 0.85f, 0.1f) : points == 0 ? Color.gray : Color.white;
-        text.color = color;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.outlineWidth = 0.3f;
+        text.outlineColor = new Color32(0, 0, 0, 255);
+
+        Color color = PointsColor(points, bullseye);
 
         for (float t = 0f; t < popupDuration; t += Time.deltaTime)
         {
-            go.transform.position += Vector3.up * (0.4f * Time.deltaTime);
+            float k = t / popupDuration;
+
+            // Petit effet "pop" au début, puis montée et fondu à la fin
+            float pop = k < 0.15f ? Mathf.Lerp(0.4f, 1.2f, k / 0.15f) : Mathf.Lerp(1.2f, 1f, Mathf.Min(1f, (k - 0.15f) / 0.15f));
+            text.fontSize = baseSize * pop;
+            go.transform.position = start + Vector3.up * (0.5f * k);
             if (cam) go.transform.rotation = Quaternion.LookRotation(go.transform.position - cam.transform.position);
-            color.a = 1f - Mathf.Pow(t / popupDuration, 3f);
+
+            color.a = k < 0.7f ? 1f : 1f - (k - 0.7f) / 0.3f;
             text.color = color;
             yield return null;
         }
 
         Destroy(go);
+    }
+
+    static Color PointsColor(int points, bool bullseye)
+    {
+        if (bullseye) return new Color(1f, 0.84f, 0f);          // or
+        if (points >= 8) return new Color(1f, 0.35f, 0.25f);    // rouge vif
+        if (points >= 4) return new Color(0.45f, 0.85f, 1f);    // bleu clair
+        if (points > 0) return Color.white;
+        return new Color(0.6f, 0.6f, 0.6f);                     // gris
     }
 }

@@ -102,6 +102,27 @@ public class ArrowHit : MonoBehaviour
         if (closest.HasValue) StickInto(closest.Value, dir);
     }
 
+    /// <summary>
+    /// Pour tester sans casque : lance la flèche depuis 'origin' dans la direction 'dir'.
+    /// Utilisé par TestShooter.
+    /// </summary>
+    public void DebugLaunch(Vector3 origin, Vector3 dir, float speed)
+    {
+        if (grab.isSelected) return;
+
+        transform.SetParent(null, true);
+        rb.isKinematic = false;
+        rb.useGravity = true;
+
+        Vector3 axis = (arrow.tip.position - arrow.grabPoint.position).normalized;
+        transform.rotation = Quaternion.FromToRotation(axis, dir) * transform.rotation;
+        transform.position += origin - arrow.grabPoint.position;
+
+        rb.angularVelocity = Vector3.zero;
+        rb.linearVelocity = dir * speed;
+        StartFlight();
+    }
+
     void StartFlight()
     {
         flying = true;
