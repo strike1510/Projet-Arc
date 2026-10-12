@@ -29,9 +29,12 @@ public class MainMenu : MonoBehaviour
     [Header("Prénom")]
     [Tooltip("Texte qui affiche le prénom en cours de saisie.")]
     public TMP_Text nameText;
-    public string namePlaceholder = "Ton prénom...";
-    public Color nameColor = new Color(0.2f, 0.11f, 0.05f);
-    public Color placeholderColor = new Color(0.2f, 0.11f, 0.05f, 0.45f);
+    [Tooltip("Écrit devant le prénom sur le parchemin.")]
+    public string namePrefix = "Prénom : ";
+    [Tooltip("Affiché tant que le prénom est vide.")]
+    public string namePlaceholder = "Prénom : touche pour écrire";
+    public Color nameTextColor = Color.white;
+    public Color placeholderTextColor = new Color(1f, 1f, 1f, 0.7f);
     public int maxNameLength = 12;
 
     [Header("Clavier virtuel")]
@@ -51,6 +54,9 @@ public class MainMenu : MonoBehaviour
     public Color levelSelectedColor = new Color(0.55f, 0.95f, 0.45f);
     [Tooltip("Coché : cliquer sur un niveau le lance directement (si le prénom est rempli).")]
     public bool playOnLevelClick = true;
+
+    [Tooltip("Le texte titre de chaque bouton de niveau, dans l'ordre : y est écrit le nom du niveau (Level Names).")]
+    public TMP_Text[] levelTitleTexts = new TMP_Text[3];
 
     [Tooltip("Un texte par bouton de niveau, dans l'ordre : y est écrit le meilleur score du niveau.")]
     public TMP_Text[] levelRecordTexts = new TMP_Text[3];
@@ -189,12 +195,17 @@ public class MainMenu : MonoBehaviour
     {
         if (nameText == null) return;
         bool empty = playerName.Length == 0;
-        nameText.text = empty ? namePlaceholder : playerName;
-        nameText.color = empty ? placeholderColor : nameColor;
+        nameText.text = empty ? namePlaceholder : namePrefix + playerName;
+        nameText.color = empty ? placeholderTextColor : nameTextColor;
     }
 
     public void RefreshLeaderboards()
     {
+        // Nom de chaque niveau sur son bouton
+        for (int level = 0; level < levelTitleTexts.Length; level++)
+            if (levelTitleTexts[level] != null && level < levelNames.Length)
+                levelTitleTexts[level].text = levelNames[level];
+
         // Meilleur score affiché sur chaque bouton de niveau
         for (int level = 0; level < levelRecordTexts.Length; level++)
         {
