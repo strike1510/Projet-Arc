@@ -242,6 +242,9 @@ public class ScoreBoard : MonoBehaviour
             WoodUI.NewButton(content, "Nouvelle partie", new Vector2(170, y - 40), new Vector2(320, 80), 36,
                 buttonSprite, () => ScoreManager.Instance.ResetGame());
             y -= 100;
+            WoodUI.NewButton(content, "Menu", new Vector2(0, y - 40), new Vector2(320, 80), 36,
+                buttonSprite, () => ScoreManager.Instance.BackToMenu());
+            y -= 100;
         }
 
         Resize(-y + Pad);

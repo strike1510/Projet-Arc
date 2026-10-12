@@ -19,7 +19,17 @@ public class ScoreManager : MonoBehaviour
     [Tooltip("Nombre de flèches par manche.")]
     public int arrowsPerRound = 10;
 
+    [Header("Classement")]
+    [Tooltip("Niveau utilisé pour le classement quand on lance la scène sans passer par le menu (0 = Niveau 1).")]
+    public int levelIndexIfNoMenu = 0;
+
     public string PlayerName => GameSettings.PlayerName;
+
+    /// <summary>Niveau en cours (0 = Niveau 1), pour le classement.</summary>
+    public int LevelIndex => GameSettings.LevelIndex >= 0 ? GameSettings.LevelIndex : levelIndexIfNoMenu;
+
+    /// <summary>Vrai quand le total de cette partie a déjà été envoyé au classement.</summary>
+    public bool GameSubmitted { get; private set; }
 
     /// <summary>Résultat d'une flèche : ses points, centre ou non, ratée ou non.</summary>
     public struct Shot
@@ -154,9 +164,32 @@ public class ScoreManager : MonoBehaviour
         CheckEndOfRound();
     }
 
-    /// <summary>Remet tout à zéro (nouvelle partie).</summary>
+    /// <summary>
+    /// Enregistre le total de la partie dans le classement du niveau (une seule fois par partie).
+    /// Renvoie la place obtenue (0 = premier) ou -1.
+    /// </summary>
+    public int SubmitGame()
+    {
+        if (GameSubmitted || TotalScore <= 0) return -1;
+        GameSubmitted = true;
+        return Leaderboard.Submit(LevelIndex, PlayerName, TotalScore);
+    }
+
+    /// <summary>Enregistre la partie puis revient au menu (scène de l'Open World).</summary>
+    public void BackToMenu()
+    {
+        SubmitGame();
+        UnityEngine.SceneManagement.SceneManager.LoadScene(GameSettings.MenuScene);
+    }
+
+    // Casque retiré / application fermée en pleine partie : on garde quand même le score
+    void OnApplicationQuit() => SubmitGame();
+
+    /// <summary>Enregistre la partie en cours, puis remet tout à zéro (nouvelle partie).</summary>
     public void ResetGame()
     {
+        SubmitGame();
+        GameSubmitted = false;
         roundScores.Clear();
         roundShots.Clear();
         TotalScore = ArrowsShot = Hits = Bullseyes = 0;

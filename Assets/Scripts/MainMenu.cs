@@ -8,54 +8,81 @@ using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 
 /// <summary>
-/// Menu principal VR : panneau en bois flottant avec saisie du nom (clavier virtuel),
-/// choix de la difficulté et bouton Jouer.
-/// Usage : un GameObject vide dans la scène Menu + ce script. Tout le reste est généré au lancement.
-/// Le joueur regarde vers +Z : place l'objet ~1.5 m devant lui, à hauteur des yeux.
+/// Menu de l'Open World. Tout le visuel (panneau, textes, boutons) est construit à la main dans l'éditeur ;
+/// ce script ne fait que le remplir et réagir aux boutons.
+///
+/// Branchement des boutons (On Click () dans l'Inspector de chaque bouton) :
+///   Prénom            → MainMenu.OpenKeyboard()
+///   Niveau 1 / 2 / 3  → MainMenu.SelectLevel(0 / 1 / 2)   (lance le niveau si le prénom est rempli)
+///   Effacer           → MainMenu.Backspace()
+///   Espace            → MainMenu.Space()
+///   OK (du clavier)   → MainMenu.CloseKeyboard()
+///   JOUER (optionnel) → MainMenu.Play()
+/// Les touches lettres sont branchées toutes seules (voir "Générer le clavier").
 /// </summary>
 public class MainMenu : MonoBehaviour
 {
-    [Header("Scènes (toutes sur la même tant qu'il n'y a qu'un niveau)")]
-    public string sceneFacile = "SampleScene";
-    public string sceneNormal = "SampleScene";
-    public string sceneDifficile = "SampleScene";
+    [Header("Niveaux (scènes à lancer — vides tant que les niveaux ne sont pas dans le projet)")]
+    public string[] levelScenes = { "", "", "" };
+    public string[] levelNames = { "Niveau 1", "Niveau 2", "Niveau 3" };
 
-    [Header("Nom")]
+    [Header("Prénom")]
+    [Tooltip("Texte qui affiche le prénom en cours de saisie.")]
+    public TMP_Text nameText;
+    public string namePlaceholder = "Ton prénom...";
+    public Color nameColor = new Color(0.2f, 0.11f, 0.05f);
+    public Color placeholderColor = new Color(0.2f, 0.11f, 0.05f, 0.45f);
     public int maxNameLength = 12;
 
-    [Header("Flottement")]
-    public float bobAmplitude = 0.03f;
-    public float bobSpeed = 1.2f;
-    public float swayDegrees = 1.5f;
+    [Header("Clavier virtuel")]
+    [Tooltip("Panneau du clavier : caché au départ, ouvert par le bouton Prénom, fermé par OK.")]
+    public GameObject keyboardPanel;
+    [Tooltip("Objet qui contient les touches (avec un Grid Layout Group de préférence).")]
+    public Transform keysContainer;
+    [Tooltip("Modèle d'une touche : un Button avec un texte TMP en enfant.")]
+    public Button keyPrefab;
+    [Tooltip("Lettres du clavier, dans l'ordre.")]
+    public string keys = "AZERTYUIOPQSDFGHJKLMWXCVBN";
 
-    // Taille du panneau (unités du canvas ; 1 unité = 1.2 mm)
-    const float W = 1000f, H = 860f, PixelToMeter = 0.0012f;
+    [Header("Choix du niveau")]
+    [Tooltip("Les 3 boutons de niveau, dans l'ordre.")]
+    public Button[] levelButtons = new Button[3];
+    public Color levelNormalColor = Color.white;
+    public Color levelSelectedColor = new Color(0.55f, 0.95f, 0.45f);
+    [Tooltip("Coché : cliquer sur un niveau le lance directement (si le prénom est rempli).")]
+    public bool playOnLevelClick = true;
 
-    static readonly Color WoodLight = new Color(0.62f, 0.42f, 0.24f);
-    static readonly Color WoodDark = new Color(0.36f, 0.22f, 0.11f);
-    static readonly Color Ink = new Color(0.20f, 0.11f, 0.05f);
-    static readonly Color Cream = new Color(1f, 0.94f, 0.80f);
-    static readonly Color Selected = new Color(0.70f, 1f, 0.62f);
+    [Tooltip("Un texte par bouton de niveau, dans l'ordre : y est écrit le meilleur score du niveau.")]
+    public TMP_Text[] levelRecordTexts = new TMP_Text[3];
+    [Tooltip("{0} = prénom, {1} = score")]
+    public string recordFormat = "Record : {0} - {1}";
+    public string noRecordText = "Pas encore de record";
 
-    Transform board;
-    Vector3 boardBasePos;
-    TextMeshProUGUI nameText, messageText;
-    readonly Dictionary<Difficulty, Image> difficultyButtons = new();
-    Sprite plankSprite, keySprite;
+    [Header("Top 3 détaillé (optionnel, peut rester vide)")]
+    [Tooltip("Un texte par niveau, dans l'ordre (Niveau 1, 2, 3). Rempli avec le top 3.")]
+    public TMP_Text[] leaderboardTexts = new TMP_Text[3];
+    [Tooltip("{0} = place, {1} = prénom, {2} = score")]
+    public string leaderboardLine = "{0}. {1}  {2}";
+    public string leaderboardEmptyLine = "{0}. ---";
+
+    [Header("Message (erreurs, infos)")]
+    public TMP_Text messageText;
+
     string playerName = "";
+    int selectedLevel = -1;
 
     void Start()
     {
-        EnsureXREventSystem();
-
-        plankSprite = MakeSprite(MakeWoodTexture(512, 440, 5, 0f, true));
-        keySprite = MakeSprite(MakeWoodTexture(128, 64, 1, 42f, false));
-
-        BuildBoard();
-        BuildUI();
-        SelectDifficulty(GameSettings.Difficulty);
+        GameSettings.MenuScene = SceneManager.GetActiveScene().name;
+        EnsureXRInput();
+        WireKeyboard();
 
         if (GameSettings.PlayerName != "Joueur") playerName = GameSettings.PlayerName;
+        HighlightLevel(GameSettings.LevelIndex);
+        if (keyboardPanel != null) keyboardPanel.SetActive(false);
+        RefreshName();
+        RefreshLeaderboards();
+        SetMessage("");
     }
 
     void OnEnable()
@@ -68,267 +95,224 @@ public class MainMenu : MonoBehaviour
         if (Keyboard.current != null) Keyboard.current.onTextInput -= OnPhysicalKey;
     }
 
-    void Update()
-    {
-        if (board != null)
-        {
-            float t = Time.time * bobSpeed;
-            board.localPosition = boardBasePos + Vector3.up * Mathf.Sin(t) * bobAmplitude;
-            board.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(t * 0.7f) * swayDegrees);
-        }
+    // ---------- Actions branchées sur les boutons ----------
 
-        if (nameText != null)
+    public void SelectLevel(int index)
+    {
+        HighlightLevel(index);
+        if (selectedLevel < 0) return;
+
+        if (!playOnLevelClick) { SetMessage(""); return; }
+
+        if (playerName.Trim().Length == 0)
         {
-            bool cursor = playerName.Length < maxNameLength && (Time.time % 1f) < 0.5f;
-            nameText.text = playerName + (cursor ? "_" : " ");
+            SetMessage("Entre ton prénom d'abord !");
+            OpenKeyboard();
+            return;
+        }
+        Play();
+    }
+
+    void HighlightLevel(int index)
+    {
+        selectedLevel = index >= 0 && index < levelButtons.Length ? index : -1;
+
+        for (int i = 0; i < levelButtons.Length; i++)
+        {
+            if (levelButtons[i] == null) continue;
+            var img = levelButtons[i].targetGraphic;
+            if (img != null) img.color = i == selectedLevel ? levelSelectedColor : levelNormalColor;
         }
     }
 
-    // ---------- Actions ----------
-
-    void TypeChar(char c)
+    public void OpenKeyboard()
     {
-        if (playerName.Length >= maxNameLength) return;
-        playerName += c;
-        messageText.text = "";
+        if (keyboardPanel != null) keyboardPanel.SetActive(true);
     }
 
-    void Backspace()
+    public void CloseKeyboard()
     {
-        if (playerName.Length > 0) playerName = playerName.Substring(0, playerName.Length - 1);
+        if (keyboardPanel != null) keyboardPanel.SetActive(false);
+        if (playerName.Trim().Length > 0) SetMessage("");
+    }
+
+    public void TypeLetter(string letter)
+    {
+        if (string.IsNullOrEmpty(letter) || playerName.Length >= maxNameLength) return;
+        playerName += letter;
+        RefreshName();
+        SetMessage("");
+    }
+
+    public void Space()
+    {
+        if (playerName.Length > 0 && !playerName.EndsWith(" ")) TypeLetter(" ");
+    }
+
+    public void Backspace()
+    {
+        if (playerName.Length == 0) return;
+        playerName = playerName.Substring(0, playerName.Length - 1);
+        RefreshName();
+    }
+
+    public void Play()
+    {
+        string name = playerName.Trim();
+        if (name.Length == 0) { SetMessage("Entre ton prénom d'abord !"); return; }
+        if (selectedLevel < 0) { SetMessage("Choisis un niveau !"); return; }
+
+        string levelName = selectedLevel < levelNames.Length ? levelNames[selectedLevel] : $"Niveau {selectedLevel + 1}";
+        string scene = selectedLevel < levelScenes.Length ? levelScenes[selectedLevel] : "";
+
+        if (string.IsNullOrWhiteSpace(scene))
+        {
+            SetMessage($"{levelName} n'est pas encore disponible.");
+            return;
+        }
+        if (!Application.CanStreamedLevelBeLoaded(scene))
+        {
+            SetMessage($"Scène introuvable : {scene}");
+            Debug.LogError($"[MainMenu] La scène '{scene}' n'est pas dans File > Build Profiles > Scene List.");
+            return;
+        }
+
+        GameSettings.PlayerName = name;
+        GameSettings.LevelIndex = selectedLevel;
+        GameSettings.LevelName = levelName;
+        SceneManager.LoadScene(scene);
+    }
+
+    // ---------- Affichage ----------
+
+    void RefreshName()
+    {
+        if (nameText == null) return;
+        bool empty = playerName.Length == 0;
+        nameText.text = empty ? namePlaceholder : playerName;
+        nameText.color = empty ? placeholderColor : nameColor;
+    }
+
+    public void RefreshLeaderboards()
+    {
+        // Meilleur score affiché sur chaque bouton de niveau
+        for (int level = 0; level < levelRecordTexts.Length; level++)
+        {
+            if (levelRecordTexts[level] == null) continue;
+            var top = Leaderboard.Get(level);
+            levelRecordTexts[level].text = top.Count > 0 ? string.Format(recordFormat, top[0].name, top[0].score) : noRecordText;
+        }
+
+        // Top 3 détaillé (si des textes sont renseignés)
+        for (int level = 0; level < leaderboardTexts.Length; level++)
+        {
+            if (leaderboardTexts[level] == null) continue;
+
+            var top = Leaderboard.Get(level);
+            var lines = new List<string>();
+            for (int i = 0; i < Leaderboard.Size; i++)
+                lines.Add(i < top.Count
+                    ? string.Format(leaderboardLine, i + 1, top[i].name, top[i].score)
+                    : string.Format(leaderboardEmptyLine, i + 1));
+
+            leaderboardTexts[level].text = string.Join("\n", lines);
+        }
+    }
+
+    void SetMessage(string msg)
+    {
+        if (messageText != null) messageText.text = msg;
+    }
+
+    // ---------- Clavier ----------
+
+    /// <summary>
+    /// Branche chaque touche du conteneur sur TypeLetter (d'après le texte de la touche).
+    /// S'il n'y a aucune touche, les crée à partir du modèle.
+    /// </summary>
+    void WireKeyboard()
+    {
+        if (keysContainer == null) return;
+        if (keysContainer.GetComponentsInChildren<Button>(true).Length == 0) CreateKeys();
+
+        foreach (var button in keysContainer.GetComponentsInChildren<Button>(true))
+        {
+            var label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label == null || label.text.Trim().Length != 1) continue;   // ignore Effacer / Espace
+            string letter = label.text.Trim().ToUpper();
+            button.onClick.AddListener(() => TypeLetter(letter));
+        }
+    }
+
+    void CreateKeys()
+    {
+        if (keyPrefab == null || keysContainer == null) return;
+        foreach (char c in keys)
+        {
+            var key = Instantiate(keyPrefab, keysContainer);
+            key.name = "Touche " + c;
+            var label = key.GetComponentInChildren<TMP_Text>(true);
+            if (label != null) label.text = c.ToString();
+            key.gameObject.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// Clic droit sur le composant > "Générer le clavier" : crée les touches dans la scène, dans l'éditeur.
+    /// Elles deviennent de vrais objets que tu peux déplacer, recolorer ou supprimer.
+    /// </summary>
+    [ContextMenu("Générer le clavier")]
+    void GenerateKeyboardInEditor()
+    {
+        if (keyPrefab == null || keysContainer == null)
+        {
+            Debug.LogError("[MainMenu] Renseigne d'abord 'Keys Container' et 'Key Prefab'.");
+            return;
+        }
+        for (int i = keysContainer.childCount - 1; i >= 0; i--)
+        {
+            var child = keysContainer.GetChild(i);
+            if (child != keyPrefab.transform) DestroyImmediate(child.gameObject);
+        }
+        CreateKeys();
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(keysContainer);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+#endif
+    }
+
+    [ContextMenu("Effacer tous les classements")]
+    void ClearLeaderboards()
+    {
+        for (int i = 0; i < levelScenes.Length; i++) Leaderboard.Clear(i);
+        RefreshLeaderboards();
+        Debug.Log("[MainMenu] Classements effacés.");
     }
 
     void OnPhysicalKey(char c)
     {
         if (c == '\b') Backspace();
-        else if (char.IsLetterOrDigit(c) || c == ' ' || c == '-') TypeChar(char.ToUpper(c));
+        else if (c == ' ') Space();
+        else if (char.IsLetterOrDigit(c) || c == '-') TypeLetter(char.ToUpper(c).ToString());
     }
 
-    void SelectDifficulty(Difficulty d)
-    {
-        GameSettings.Difficulty = d;
-        foreach (var kv in difficultyButtons)
-            kv.Value.color = kv.Key == d ? Selected : Color.white;
-    }
-
-    void Play()
-    {
-        string name = playerName.Trim();
-        if (name.Length == 0)
-        {
-            messageText.text = "Entre ton nom d'abord !";
-            return;
-        }
-
-        GameSettings.PlayerName = name;
-
-        string scene = GameSettings.Difficulty switch
-        {
-            Difficulty.Facile => sceneFacile,
-            Difficulty.Difficile => sceneDifficile,
-            _ => sceneNormal
-        };
-
-        if (!Application.CanStreamedLevelBeLoaded(scene))
-        {
-            messageText.text = "Scène introuvable : " + scene;
-            Debug.LogError($"[MainMenu] La scène '{scene}' n'est pas dans File > Build Profiles > Scene List.");
-            return;
-        }
-
-        SceneManager.LoadScene(scene);
-    }
-
-    // ---------- Construction ----------
-
-    void BuildBoard()
-    {
-        board = new GameObject("Panneau").transform;
-        board.SetParent(transform, false);
-        boardBasePos = Vector3.zero;
-
-        // Épaisseur du panneau (cube en bois derrière le canvas)
-        var slab = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        slab.name = "Planche";
-        Destroy(slab.GetComponent<Collider>());
-        slab.transform.SetParent(board, false);
-        slab.transform.localScale = new Vector3(W * PixelToMeter + 0.04f, H * PixelToMeter + 0.04f, 0.05f);
-        slab.transform.localPosition = new Vector3(0f, 0f, 0.03f);
-
-        var shader = Shader.Find("Universal Render Pipeline/Lit");
-        if (shader == null) shader = Shader.Find("Standard");
-        var mat = new Material(shader) { mainTexture = MakeWoodTexture(256, 256, 4, 7f, false) };
-        mat.color = new Color(0.85f, 0.85f, 0.85f);
-        if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.1f);
-        slab.GetComponent<Renderer>().sharedMaterial = mat;
-    }
-
-    void BuildUI()
-    {
-        var canvasGO = new GameObject("MenuCanvas", typeof(RectTransform));
-        canvasGO.transform.SetParent(board, false);
-        var canvas = canvasGO.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.WorldSpace;
-        canvas.worldCamera = Camera.main;
-        canvasGO.AddComponent<CanvasScaler>().dynamicPixelsPerUnit = 10f;
-        canvasGO.AddComponent<TrackedDeviceGraphicRaycaster>();   // clics avec les manettes VR
-        canvasGO.AddComponent<GraphicRaycaster>();                // clics à la souris (tests sans casque)
-
-        var rt = (RectTransform)canvasGO.transform;
-        rt.sizeDelta = new Vector2(W, H);
-        rt.localScale = Vector3.one * PixelToMeter;
-
-        // Fond en planches
-        var bg = NewImage(rt, "Fond", Vector2.zero, new Vector2(W, H), plankSprite, Color.white);
-        bg.raycastTarget = false;
-
-        NewText(rt, "VR ARCHERY CHALLENGE", new Vector2(0, 375), new Vector2(W, 80), 58, Cream, FontStyles.Bold);
-
-        // Nom
-        NewText(rt, "Ton nom :", new Vector2(0, 300), new Vector2(W, 50), 36, Cream);
-        var field = NewImage(rt, "ChampNom", new Vector2(0, 240), new Vector2(560, 70), null, Cream);
-        field.raycastTarget = false;
-        nameText = NewText((RectTransform)field.transform, "", Vector2.zero, new Vector2(540, 70), 42, Ink, FontStyles.Bold);
-
-        // Clavier virtuel AZERTY
-        string[] rows = { "1234567890", "AZERTYUIOP", "QSDFGHJKLM", "WXCVBN" };
-        const float key = 74f, gap = 8f;
-        float y = 150f;
-        for (int r = 0; r < rows.Length; r++, y -= key - 4f)
-        {
-            string row = rows[r];
-            int extra = r == rows.Length - 1 ? 2 : 0;       // dernière ligne : + Espace + Effacer (2 cases chacune)
-            float rowWidth = (row.Length + extra * 2) * (key + gap) - gap;
-            float x = -rowWidth / 2f + key / 2f;
-
-            foreach (char c in row)
-            {
-                char ch = c;
-                NewButton(rt, c.ToString(), new Vector2(x, y), new Vector2(key, key - 10f), 34, () => TypeChar(ch));
-                x += key + gap;
-            }
-
-            if (extra > 0)
-            {
-                float wide = key * 2 + gap;
-                x += wide / 2f - key / 2f;
-                NewButton(rt, "Espace", new Vector2(x, y), new Vector2(wide, key - 10f), 28, () => TypeChar(' '));
-                x += wide + gap;
-                NewButton(rt, "Effacer", new Vector2(x, y), new Vector2(wide, key - 10f), 28, Backspace);
-            }
-        }
-
-        // Difficulté
-        NewText(rt, "Difficulté :", new Vector2(0, -150), new Vector2(W, 50), 36, Cream);
-        float dx = -230f;
-        foreach (Difficulty d in System.Enum.GetValues(typeof(Difficulty)))
-        {
-            Difficulty diff = d;
-            var b = NewButton(rt, d.ToString(), new Vector2(dx, -215), new Vector2(210, 70), 34, () => SelectDifficulty(diff));
-            difficultyButtons[d] = b.GetComponent<Image>();
-            dx += 230f;
-        }
-
-        // Jouer
-        NewButton(rt, "JOUER", new Vector2(0, -320), new Vector2(320, 90), 50, Play, FontStyles.Bold);
-        messageText = NewText(rt, "", new Vector2(0, -395), new Vector2(W, 40), 30, new Color(1f, 0.55f, 0.45f));
-    }
-
-    static void EnsureXREventSystem()
+    /// <summary>Rend les boutons cliquables avec les manettes VR et à la souris.</summary>
+    void EnsureXRInput()
     {
         var es = FindAnyObjectByType<EventSystem>();
         if (es == null) es = new GameObject("EventSystem").AddComponent<EventSystem>();
-        if (es.GetComponent<XRUIInputModule>() != null) return;
-
-        foreach (var m in es.GetComponents<BaseInputModule>()) DestroyImmediate(m);
-        es.gameObject.AddComponent<XRUIInputModule>();
-    }
-
-    // ---------- Helpers UI ----------
-
-    Image NewImage(RectTransform parent, string name, Vector2 pos, Vector2 size, Sprite sprite, Color color)
-    {
-        var go = new GameObject(name, typeof(RectTransform));
-        go.transform.SetParent(parent, false);
-        var r = (RectTransform)go.transform;
-        r.anchoredPosition = pos;
-        r.sizeDelta = size;
-        var img = go.AddComponent<Image>();
-        img.sprite = sprite;
-        img.color = color;
-        return img;
-    }
-
-    TextMeshProUGUI NewText(RectTransform parent, string text, Vector2 pos, Vector2 size, float fontSize, Color color,
-        FontStyles style = FontStyles.Normal)
-    {
-        var go = new GameObject("Texte", typeof(RectTransform));
-        go.transform.SetParent(parent, false);
-        var r = (RectTransform)go.transform;
-        r.anchoredPosition = pos;
-        r.sizeDelta = size;
-        var t = go.AddComponent<TextMeshProUGUI>();
-        t.text = text;
-        t.fontSize = fontSize;
-        t.color = color;
-        t.fontStyle = style;
-        t.alignment = TextAlignmentOptions.Center;
-        t.raycastTarget = false;
-        return t;
-    }
-
-    Button NewButton(RectTransform parent, string label, Vector2 pos, Vector2 size, float fontSize,
-        UnityEngine.Events.UnityAction onClick, FontStyles style = FontStyles.Bold)
-    {
-        var img = NewImage(parent, "Bouton " + label, pos, size, keySprite, Color.white);
-        var btn = img.gameObject.AddComponent<Button>();
-        var colors = btn.colors;
-        colors.normalColor = Color.white;
-        colors.highlightedColor = new Color(1.25f, 1.15f, 0.9f);
-        colors.pressedColor = new Color(0.65f, 0.55f, 0.45f);
-        colors.selectedColor = Color.white;
-        colors.colorMultiplier = 1.3f;
-        btn.colors = colors;
-        btn.onClick.AddListener(onClick);
-        NewText((RectTransform)img.transform, label, Vector2.zero, size, fontSize, Cream, style);
-        return btn;
-    }
-
-    // ---------- Texture bois procédurale ----------
-
-    static Sprite MakeSprite(Texture2D tex) =>
-        Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
-
-    static Texture2D MakeWoodTexture(int w, int h, int planks, float seed, bool frame)
-    {
-        var tex = new Texture2D(w, h, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Clamp };
-        var px = new Color[w * h];
-        float plankH = (float)h / planks;
-        int border = Mathf.Max(3, w / 64);
-
-        for (int y = 0; y < h; y++)
+        if (es.GetComponent<XRUIInputModule>() == null)
         {
-            int p = Mathf.Min(planks - 1, (int)(y / plankH));
-            float py = (y - p * plankH) / plankH;
-
-            for (int x = 0; x < w; x++)
-            {
-                float n = Mathf.PerlinNoise(x * 0.012f + seed + p * 13.7f, y * 0.05f + p * 3.1f);
-                float grain = Mathf.Pow(Mathf.Sin(y * 0.45f + n * 20f + p * 5f) * 0.5f + 0.5f, 3f);
-                float fine = Mathf.PerlinNoise(x * 0.25f + seed, y * 1.7f);
-                Color c = Color.Lerp(WoodLight, WoodDark, 0.55f * grain + 0.25f * fine + 0.2f * n);
-                c *= 0.88f + 0.24f * Mathf.PerlinNoise(p * 7.3f + seed, 0.5f);   // teinte par planche
-
-                if (planks > 1 && (py < 0.02f || py > 0.98f)) c *= 0.45f;        // joints entre planches
-                if (frame && (x < border || y < border || x >= w - border || y >= h - border)) c *= 0.55f;
-
-                c.a = 1f;
-                px[y * w + x] = c;
-            }
+            foreach (var m in es.GetComponents<BaseInputModule>()) DestroyImmediate(m);
+            es.gameObject.AddComponent<XRUIInputModule>();
         }
 
-        tex.SetPixels(px);
-        tex.Apply();
-        return tex;
+        foreach (var canvas in GetComponentsInChildren<Canvas>(true))
+        {
+            if (canvas.renderMode != RenderMode.WorldSpace) continue;
+            if (canvas.worldCamera == null) canvas.worldCamera = Camera.main;
+            if (!canvas.TryGetComponent(out TrackedDeviceGraphicRaycaster _)) canvas.gameObject.AddComponent<TrackedDeviceGraphicRaycaster>();
+            if (!canvas.TryGetComponent(out GraphicRaycaster _)) canvas.gameObject.AddComponent<GraphicRaycaster>();
+        }
     }
 }
