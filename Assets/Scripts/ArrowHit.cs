@@ -32,7 +32,9 @@ public class ArrowHit : MonoBehaviour
     bool grabbedWhileStuck;
     bool wasMoving;        // la flèche a déjà bougé depuis le tir (physique active)
     float flightTime;
+    bool gravityWarned;
     Vector3 previousTip;
+    Vector3 lastDir = Vector3.forward;   // dernière direction de vol connue
 
     void Awake()
     {
@@ -78,10 +80,16 @@ public class ArrowHit : MonoBehaviour
         {
             // Figée en plein vol par un autre script (ex. collision dans ArrowController) sans qu'on ait vu l'impact :
             // on termine le tir pour ne pas bloquer la manche.
-            if (wasMoving && !grab.isSelected) EndFlight(null);
+            if (wasMoving && !grab.isSelected) ResolveFrozen();
             return;
         }
         wasMoving = true;
+
+        if (!rb.useGravity && !gravityWarned)
+        {
+            gravityWarned = true;
+            Debug.LogWarning($"[ArrowHit] La gravité de '{name}' est coupée pendant le vol : la flèche vole tout droit. Vérifie Use Gravity sur son Rigidbody ou un autre script qui la coupe.", this);
+        }
 
         flightTime += Time.fixedDeltaTime;
         Vector3 velocity = rb.linearVelocity;
@@ -102,6 +110,7 @@ public class ArrowHit : MonoBehaviour
         }
 
         Vector3 dir = velocity / speed;
+        lastDir = dir;
 
         // Oriente la flèche dans le sens du vol (la pointe suit la trajectoire)
         Vector3 axis = (arrow.tip.position - arrow.grabPoint.position).normalized;
@@ -123,11 +132,73 @@ public class ArrowHit : MonoBehaviour
             if (closest == null || h.distance < closest.Value.distance) closest = h;
         }
 
+        // Oiseau bonus sur la trajectoire, avant tout obstacle ?
+        float maxDist = closest.HasValue ? closest.Value.distance : float.MaxValue;
+        bool birdHit = BirdTarget.FindHit(previousTip, end, out var bird, out var birdPoint, out float birdDist) && birdDist <= maxDist;
+
         // Trajectoire visible dans la vue Scene pendant 5 s (jaune = vol)
         Debug.DrawLine(previousTip, end, Color.yellow, 5f);
         previousTip = tip;
 
-        if (closest.HasValue) StickInto(closest.Value, dir);
+        if (birdHit) HitBird(bird, birdPoint, dir);
+        else if (closest.HasValue) StickInto(closest.Value, dir);
+    }
+
+    /// <summary>
+    /// La flèche a été figée par un autre script (ex. ArrowController qui la plante lui-même au contact)
+    /// avant que notre raycast ne voie l'impact. On cherche ce qu'elle a touché autour de la pointe.
+    /// </summary>
+    void ResolveFrozen()
+    {
+        Vector3 tip = arrow.tip.position;
+        Vector3 start = tip - lastDir * 1f;
+        Target target = null;
+        Vector3 point = tip;
+
+        // 1) Rayon le long de la flèche, un peu avant et un peu après la pointe
+        float best = float.MaxValue;
+        foreach (var h in Physics.RaycastAll(start, lastDir, 1.5f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+        {
+            if (h.collider.transform.IsChildOf(transform)) continue;
+            if (arrow.bow != null && h.collider.transform.IsChildOf(arrow.bow.transform)) continue;
+            var t = h.collider.GetComponentInParent<Target>();
+            if (t == null || h.distance >= best) continue;
+            best = h.distance; target = t; point = h.point;
+        }
+
+        // 2) Sinon, une cible tout près de la pointe
+        if (target == null)
+        {
+            foreach (var c in Physics.OverlapSphere(tip, 0.15f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+            {
+                var t = c.GetComponentInParent<Target>();
+                if (t == null) continue;
+                target = t; point = c.ClosestPoint(tip);
+                break;
+            }
+        }
+
+        if (target != null)
+        {
+            transform.SetParent(target.transform, true);
+            stuck = true;
+            Debug.Log($"[ArrowHit] Flèche plantée par ArrowController dans la cible '{target.name}' : impact compté.", target);
+        }
+        else Debug.Log("[ArrowHit] Flèche arrêtée par un autre script, aucune cible autour : raté.");
+
+        EndFlight(target, point);
+    }
+
+    /// <summary>
+    /// La flèche touche un oiseau : il donne ses points et s'envole, la flèche continue sa chute sans compter.
+    /// </summary>
+    void HitBird(BirdTarget bird, Vector3 point, Vector3 dir)
+    {
+        Debug.DrawLine(point - dir * 0.3f, point, Color.cyan, 10f);
+        flying = false;
+        if (!counted) return;
+        counted = false;
+        bird.OnArrowHit(point, dir);
     }
 
     /// <summary>
@@ -158,6 +229,7 @@ public class ArrowHit : MonoBehaviour
         stuck = false;
         wasMoving = false;
         flightTime = 0f;
+        gravityWarned = false;
         previousTip = arrow.tip.position;
         transform.SetParent(null, true);
 
@@ -216,6 +288,17 @@ public class ArrowHit : MonoBehaviour
         stuck = true;
         if (target == null) Debug.Log($"[ArrowHit] Flèche arrêtée par '{collision.collider.name}' (pas une cible).", collision.collider);
         EndFlight(target, point);
+    }
+
+    /// <summary>La cible où la flèche est plantée disparaît : la flèche se détache et tombe.</summary>
+    public void Unstick()
+    {
+        if (grab != null && grab.isSelected) return;
+        stuck = false;
+        flying = false;
+        transform.SetParent(null, true);
+        rb.isKinematic = false;
+        rb.useGravity = true;
     }
 
     void OnGrabbed(SelectEnterEventArgs args)
