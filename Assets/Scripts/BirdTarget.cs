@@ -111,7 +111,7 @@ public class BirdTarget : MonoBehaviour
         if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterHit(points, false);
         else Debug.LogWarning("[BirdTarget] Pas de ScoreManager dans la scène : point non compté.");
 
-        Debug.Log($"[BirdTarget] Oiseau touché : +{points}", this);
+        Debug.Log($"[BirdTarget] Oiseau '{name}' touché : +{points}", this);
 
         if (showPopup) StartCoroutine(Popup(Center));
         StartCoroutine(FlyAway(arrowDirection));
@@ -129,6 +129,11 @@ public class BirdTarget : MonoBehaviour
             mb.enabled = false;
             packScripts.Add(mb);
         }
+
+        // Ses colliders sont coupés pendant l'envol (les flèches ne rebondissent plus dessus)
+        var colliders = new List<Collider>();
+        foreach (var c in GetComponentsInChildren<Collider>())
+            if (c.enabled) { c.enabled = false; colliders.Add(c); }
 
         // Si l'oiseau a un Rigidbody, on le pilote nous-mêmes
         var rb = GetComponent<Rigidbody>();
@@ -160,6 +165,7 @@ public class BirdTarget : MonoBehaviour
         if (animator != null && HasBool(animator, flyingAnimatorBool)) animator.SetBool(flyingAnimatorBool, false);
         if (rb != null) rb.isKinematic = rbWasKinematic;
         foreach (var mb in packScripts) if (mb != null) mb.enabled = true;
+        foreach (var c in colliders) if (c != null) c.enabled = true;
 
         gameObject.SetActive(false);
     }

@@ -39,7 +39,7 @@ public class TargetSpawner : MonoBehaviour
 
     [Header("Où (autour de la direction du regard)")]
     [Tooltip("Distance au joueur (m), min et max.")]
-    public Vector2 distance = new Vector2(12f, 25f);
+    public Vector2 distance = new Vector2(5f, 10f);
 
     [Tooltip("Angle à gauche/droite du regard (degrés). 35 = reste bien dans le champ de vision.")]
     public float maxAngle = 35f;
@@ -51,15 +51,15 @@ public class TargetSpawner : MonoBehaviour
     public float clearRadius = 0.8f;
 
     [Header("Mouvement")]
-    [Tooltip("Chance (0 à 1) qu'une cible apparue bouge aussi.")]
-    [Range(0f, 1f)] public float moveChance = 0.5f;
+    [Tooltip("Chance (0 à 1) qu'une cible apparue bouge (1 = toutes). Elles volent, donc elles montent et descendent au hasard.")]
+    [Range(0f, 1f)] public float moveChance = 1f;
 
     readonly List<GameObject> alive = new List<GameObject>();
     Camera cam;
 
     void Start()
     {
-        cam = Camera.main;
+        cam = FindGameViewCamera();
         if (targetPrefab == null) { Debug.LogError("[TargetSpawner] Glisse un prefab de cible dans 'Target Prefab'.", this); return; }
         StartCoroutine(SpawnLoop());
     }
@@ -81,7 +81,7 @@ public class TargetSpawner : MonoBehaviour
 
     void TrySpawn()
     {
-        if (cam == null) cam = Camera.main;
+        if (cam == null || !cam.isActiveAndEnabled) cam = FindGameViewCamera();
         if (cam == null) return;
 
         Vector3 eye = cam.transform.position;
@@ -104,6 +104,7 @@ public class TargetSpawner : MonoBehaviour
             if (Physics.Linecast(eye, pos, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
 
             Spawn(pos, dir);
+            Debug.Log($"[TargetSpawner] Cible apparue à {Vector3.Distance(eye, pos):0.0} m de la caméra '{cam.name}'.");
             return;
         }
     }
@@ -120,11 +121,12 @@ public class TargetSpawner : MonoBehaviour
 
         if (Random.value < moveChance)
         {
+            // Elles volent : mouvement Auto → haut/bas, au hasard
             var mt = t.gameObject.AddComponent<MovingTarget>();
-            mt.motion = (MovingTarget.Motion)Random.Range(0, 3);
-            mt.amplitude = Random.Range(1f, 2.5f);
-            mt.speed = Random.Range(0.25f, 0.5f);
-            mt.phase = Random.value;
+            mt.motion = MovingTarget.Motion.Auto;
+            mt.aleatoire = true;
+            mt.amplitude = Random.Range(0.8f, 1.5f);
+            mt.speed = Random.Range(0.3f, 0.6f);
         }
 
         alive.Add(t.gameObject);
@@ -144,7 +146,14 @@ public class TargetSpawner : MonoBehaviour
         if (t == null) yield break;
         t.localScale = full;
 
-        yield return new WaitForSeconds(Mathf.Max(0f, lifetime - 0.6f));
+        // Durée de vie (en pause quand la manche est finie : la cible reste figée)
+        for (float left = Mathf.Max(0f, lifetime - 0.6f); left > 0f && t != null; )
+        {
+            var sm = ScoreManager.Instance;
+            if (sm == null || !sm.IsRoundOver) left -= Time.deltaTime;
+            yield return null;
+        }
+        if (t == null) yield break;
 
         // Disparition : rétrécit en 0,3 s
         for (float k = 0f; k < 1f && t != null; k += Time.deltaTime / 0.3f)
@@ -159,6 +168,18 @@ public class TargetSpawner : MonoBehaviour
 
         alive.Remove(t.gameObject);
         Destroy(t.gameObject);
+    }
+
+    /// <summary>La caméra du joueur (celle affichée à l'écran), même si un pack a ajouté une autre "Main Camera".</summary>
+    static Camera FindGameViewCamera()
+    {
+        Camera best = null;
+        foreach (var c in Camera.allCameras)
+        {
+            if (!c.isActiveAndEnabled || c.targetTexture != null || c.targetDisplay != 0) continue;
+            if (best == null || c.depth > best.depth || (c.depth == best.depth && c == Camera.main)) best = c;
+        }
+        return best != null ? best : Camera.main;
     }
 
     // Montre la zone d'apparition (vue de dessus) quand le Spawner est sélectionné

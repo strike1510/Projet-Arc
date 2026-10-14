@@ -140,6 +140,13 @@ public class ArrowHit : MonoBehaviour
         Debug.DrawLine(previousTip, end, Color.yellow, 5f);
         previousTip = tip;
 
+        // Le raycast a touché le corps d'un oiseau (ses propres colliders) : c'est un oiseau touché
+        if (!birdHit && closest.HasValue)
+        {
+            var hitBird = closest.Value.collider.GetComponentInParent<BirdTarget>();
+            if (hitBird != null && !hitBird.IsHit) { birdHit = true; bird = hitBird; birdPoint = closest.Value.point; }
+        }
+
         if (birdHit) HitBird(bird, birdPoint, dir);
         else if (closest.HasValue) StickInto(closest.Value, dir);
     }
@@ -273,6 +280,15 @@ public class ArrowHit : MonoBehaviour
     void OnCollisionEnter(Collision collision)
     {
         if (!flying || grab.isSelected) return;
+
+        // Choc physique contre un oiseau : il s'envole et donne ses points, la flèche continue de tomber
+        var birdTouched = collision.collider.GetComponentInParent<BirdTarget>();
+        if (birdTouched != null && !birdTouched.IsHit)
+        {
+            Vector3 p = collision.contactCount > 0 ? collision.GetContact(0).point : arrow.tip.position;
+            HitBird(birdTouched, p, lastDir);
+            return;
+        }
         if (collision.transform.IsChildOf(transform)) return;
         if (arrow.bow != null && collision.transform.IsChildOf(arrow.bow.transform)) return;
 
