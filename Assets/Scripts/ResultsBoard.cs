@@ -30,6 +30,11 @@ public class ResultsBoard : MonoBehaviour
     [Tooltip("Ligne d'état : flèches restantes, fin de manche...")]
     public TMP_Text statusText;
 
+    [Header("Fin de manche : message")]
+    [Tooltip("Gros message affiché seulement en fin de manche (\"Manche 1 terminée : 120 pts\").")]
+    public TMP_Text endMessageText;
+    public Color endMessageColor = new Color(1f, 0.84f, 0f);
+
     [Header("Lignes des manches")]
     [Tooltip("Objet qui contient les lignes (avec un Vertical Layout Group).")]
     public Transform roundsContainer;
@@ -54,23 +59,32 @@ public class ResultsBoard : MonoBehaviour
     [Tooltip("Groupe des boutons (Manche suivante / Nouvelle partie / Menu), affiché seulement en fin de manche.")]
     public GameObject endButtons;
 
+    bool subscribed;
+
     void Start()
     {
         EnsureXRInput();
+        TrySubscribe();
+        if (!subscribed) Debug.LogWarning("[ResultsBoard] Pas encore de ScoreManager : le panneau attend qu'il apparaisse.");
+    }
 
+    void Update()
+    {
+        if (!subscribed) TrySubscribe();   // ScoreManager créé plus tard (ou scène chargée dans un autre ordre)
+    }
+
+    void TrySubscribe()
+    {
         var sm = ScoreManager.Instance;
-        if (sm == null)
-        {
-            Debug.LogError("[ResultsBoard] Pas de ScoreManager dans la scène.");
-            return;
-        }
+        if (sm == null) return;
         sm.OnScoreChanged += Refresh;
+        subscribed = true;
         Refresh();
     }
 
     void OnDestroy()
     {
-        if (ScoreManager.Instance != null) ScoreManager.Instance.OnScoreChanged -= Refresh;
+        if (subscribed && ScoreManager.Instance != null) ScoreManager.Instance.OnScoreChanged -= Refresh;
     }
 
     // ---------- Boutons ----------
@@ -92,7 +106,23 @@ public class ResultsBoard : MonoBehaviour
             playerText.text = string.Format(playerFormat, sm.PlayerName, level);
         }
 
-        if (totalText != null) totalText.text = string.Format(totalFormat, sm.TotalScore);
+        if (totalText != null)
+        {
+            string total = string.Format(totalFormat, sm.TotalScore);
+            totalText.text = sm.IsRoundOver ? $"{total}  -  {PlaceText(sm.LevelIndex, sm.TotalScore)}" : total;
+        }
+
+        if (endMessageText != null)
+        {
+            endMessageText.gameObject.SetActive(sm.IsRoundOver);
+            if (sm.IsRoundOver)
+            {
+                endMessageText.color = endMessageColor;
+                endMessageText.text = sm.TargetReached
+                    ? $"Objectif atteint !\n<size=70%>Manche {sm.RoundNumber} : {sm.RoundScore} pts</size>"
+                    : $"Manche {sm.RoundNumber} terminée\n<size=70%>{sm.RoundScore} pts</size>";
+            }
+        }
 
         if (statusText != null)
         {
@@ -110,6 +140,16 @@ public class ResultsBoard : MonoBehaviour
         if (endButtons != null) endButtons.SetActive(sm.IsRoundOver);
 
         RefreshRows(sm);
+    }
+
+    /// <summary>Place qu'aurait ce total dans le top 3 du niveau (sans l'enregistrer).</summary>
+    static string PlaceText(int level, int total)
+    {
+        var entries = Leaderboard.Get(level);
+        int place = 0;
+        foreach (var e in entries) if (e.score >= total) place++;   // à égalité, l'ancien score reste devant
+        if (place < Leaderboard.Size) return place == 0 ? "1re place !" : $"{place + 1}e place";
+        return $"hors top {Leaderboard.Size} (3e : {entries[Leaderboard.Size - 1].score} pts)";
     }
 
     void RefreshRows(ScoreManager sm)
@@ -184,6 +224,13 @@ public class ResultsBoard : MonoBehaviour
         playerText = EnsureText(root, "Joueur", "Prénom - Niveau 1", 44, FontStyles.Bold, TextAlignmentOptions.Center, new Vector2(0, 300), new Vector2(900, 70));
         totalText = EnsureText(root, "Total", "Total : 0 pts", 40, FontStyles.Bold, TextAlignmentOptions.Left, new Vector2(0, -250), new Vector2(900, 60));
         statusText = EnsureText(root, "Etat", "10 flèches restantes", 30, FontStyles.Normal, TextAlignmentOptions.Left, new Vector2(0, -310), new Vector2(900, 50));
+
+        endMessageText = EnsureText(root, "MessageFin", "Manche 1 terminée\n<size=70%>120 pts</size>", 48, FontStyles.Bold, TextAlignmentOptions.Center, new Vector2(0, 205), new Vector2(900, 110));
+        endMessageText.color = endMessageColor;
+        endMessageText.outlineWidth = 0.25f;
+        endMessageText.outlineColor = new Color32(0, 0, 0, 255);
+        endMessageText.transform.SetAsLastSibling();   // devant les lignes
+        endMessageText.gameObject.SetActive(false);
 
         // Conteneur des lignes de manches
         var lignes = FindOrCreate(root, "Lignes", new Vector2(0, 30), new Vector2(900, 300));

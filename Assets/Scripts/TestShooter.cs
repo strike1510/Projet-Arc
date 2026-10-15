@@ -3,22 +3,20 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// OUTIL DE TEST SANS CASQUE (à ne pas laisser dans la scène finale).
-/// Clic gauche ou Espace dans la vue Game : tire la flèche là où pointe la souris.
-/// N : manche suivante quand la manche est finie.
-/// Clic sur le panneau des résultats : la caméra se place en face pour le lire (et cliquer ses boutons).
-/// Clic droit ou Échap : retour à la position de tir (automatique quand une nouvelle manche commence).
-/// Le calcul des points passe par le vrai chemin (ArrowHit → Target → ScoreManager).
+/// Tir instantané (pas de flèche, pas de physique) : ce qui est sous la souris est touché.
+///   Clic gauche ou Espace : tire là où pointe la souris (cible → points au-dessus, oiseau/pomme → bonus).
+///   N : manche suivante quand la manche est finie.
+///   Clic sur le panneau des résultats : la caméra se place en face pour le lire (et cliquer ses boutons).
+///   Clic droit ou Échap : retour à la position de tir (automatique quand une nouvelle manche commence).
+/// Les points passent par le vrai chemin : Target / BirdTarget → ScoreManager.
 /// </summary>
 public class TestShooter : MonoBehaviour
 {
-    [Tooltip("La flèche de la scène (l'objet qui a ArrowHit).")]
-    public ArrowHit arrow;
+    [Tooltip("Portée du tir (m).")]
+    public float range = 200f;
 
-    [Tooltip("Vitesse du tir (l'arc tire entre 5 et 30 m/s).")]
-    public float speed = 30f;
-
-    [Tooltip("Vise un peu plus haut pour compenser la chute due à la gravité : la flèche arrive là où tu cliques.")]
-    public bool compensateGravity = true;
+    [Tooltip("Affiche un petit trait jaune pendant un instant pour voir le tir.")]
+    public bool showTracer = true;
 
     [Header("Vue du panneau")]
     [Tooltip("Distance entre la caméra et le panneau quand on clique dessus (m).")]
@@ -29,14 +27,12 @@ public class TestShooter : MonoBehaviour
     bool inBoardView;
     Vector3 savedRigPos;
     Quaternion savedRigRot;
+    Material tracerMaterial;
 
     void Start()
     {
         cam = FindGameViewCamera();
-        Debug.Log($"[TestShooter] Caméra utilisée pour viser : '{(cam != null ? cam.name : "aucune")}'.", cam);
-        if (arrow == null) arrow = FindAnyObjectByType<ArrowHit>();
-        if (arrow == null) Debug.LogError("[TestShooter] Aucune flèche avec ArrowHit dans la scène.");
-        else Debug.Log("[TestShooter] Clic gauche ou Espace dans la vue Game pour tirer. Clic sur le panneau pour le lire, clic droit ou Échap pour revenir.");
+        Debug.Log($"[TestShooter] Tir instantané avec la caméra '{(cam != null ? cam.name : "aucune")}'. Clic gauche pour tirer, clic sur le panneau pour le lire.", cam);
 
         if (cam != null)
         {
@@ -55,63 +51,119 @@ public class TestShooter : MonoBehaviour
 
     void Update()
     {
-        if (arrow == null || cam == null) return;
+        if (cam == null || !cam.isActiveAndEnabled) cam = FindGameViewCamera();
+        if (cam == null) return;
 
         var sm = ScoreManager.Instance;
         var mouse = Mouse.current;
         var kb = Keyboard.current;
+
+        // N : manche suivante
+        if (kb != null && kb.nKey.wasPressedThisFrame && sm != null && sm.IsRoundOver)
+        {
+            sm.StartNextRound();
+            return;
+        }
 
         // Vue du panneau : clic droit / Échap pour revenir ; les clics gauches vont aux boutons du panneau
         if (inBoardView)
         {
             if ((mouse != null && mouse.rightButton.wasPressedThisFrame) || (kb != null && kb.escapeKey.wasPressedThisFrame))
                 LeaveBoardView();
-            else if (kb != null && kb.nKey.wasPressedThisFrame && sm != null && sm.IsRoundOver)
-                sm.StartNextRound();
             return;
         }
 
+        bool click = mouse != null && mouse.leftButton.wasPressedThisFrame;
+        bool space = kb != null && kb.spaceKey.wasPressedThisFrame;
+        if (!click && !space) return;
+
+        Vector2 screenPos = mouse != null ? mouse.position.ReadValue() : new Vector2(Screen.width / 2f, Screen.height / 2f);
+        Ray ray = cam.ScreenPointToRay(screenPos);
+
         // Clic sur le panneau des résultats : on se place en face
-        if (mouse != null && mouse.leftButton.wasPressedThisFrame
-            && TryGetBoardUnderMouse(cam.ScreenPointToRay(mouse.position.ReadValue()), out RectTransform board))
+        if (click && TryGetBoardUnderMouse(ray, out RectTransform board))
         {
             EnterBoardView(board);
             return;
         }
 
-        // N : manche suivante (raccourci de test)
-        if (Keyboard.current != null && Keyboard.current.nKey.wasPressedThisFrame && sm != null && sm.IsRoundOver)
+        // Manche finie : on ne tire pas (le clic sert aux boutons)
+        if (sm != null && (sm.IsRoundOver || sm.RoundStartFrame == Time.frameCount)) return;
+
+        Shoot(ray);
+    }
+
+    // ---------- Tir instantané ----------
+
+    void Shoot(Ray ray)
+    {
+        var sm = ScoreManager.Instance;
+        if (sm != null && !sm.RegisterShot()) return;   // plus de flèches
+
+        // Ce qui est touché en premier : un collider, ou la zone d'un oiseau/pomme (qui n'ont pas toujours de collider)
+        bool hasHit = TryRaycast(ray, out RaycastHit hit);
+        float hitDist = hasHit ? hit.distance : range;
+
+        BirdTarget bird = hasHit ? hit.collider.GetComponentInParent<BirdTarget>() : null;
+        Vector3 point = hasHit ? hit.point : ray.GetPoint(range);
+        if (bird != null && bird.IsHit) bird = null;
+
+        if (bird == null && BirdTarget.FindHit(ray.origin, ray.GetPoint(hitDist), out BirdTarget zoneBird, out Vector3 zonePoint, out float _))
         {
-            sm.StartNextRound();
+            bird = zoneBird;
+            point = zonePoint;
+        }
+
+        if (showTracer) Tracer(ray.origin + cam.transform.up * -0.15f + cam.transform.right * 0.1f, point);
+
+        if (bird != null)
+        {
+            bird.OnArrowHit(point, ray.direction);
             return;
         }
 
-        // Manche finie : on ne tire pas (le clic sert au bouton "Manche suivante")
-        if (sm != null && (sm.IsRoundOver || sm.RoundStartFrame == Time.frameCount)) return;
-
-        bool click = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
-        bool space = Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
-        if (!click && !space) return;
-
-        Vector2 screenPos = Mouse.current != null
-            ? Mouse.current.position.ReadValue()
-            : new Vector2(Screen.width / 2f, Screen.height / 2f);
-
-        Ray ray = cam.ScreenPointToRay(screenPos);
-        Vector3 origin = ray.origin + ray.direction * 0.5f;
-        Vector3 dir = ray.direction;
-
-        // Point visé sous la souris (on ignore la flèche elle-même)
-        if (compensateGravity && TryGetAimPoint(ray, out Vector3 aim))
+        var target = hasHit ? hit.collider.GetComponentInParent<Target>() : null;
+        if (target != null)
         {
-            float distance = Vector3.Distance(origin, aim);
-            float time = distance / speed;
-            float drop = 0.5f * -Physics.gravity.y * time * time;
-            dir = (aim + Vector3.up * drop - origin).normalized;
-            Debug.DrawLine(origin, aim, Color.cyan, 5f);
+            target.OnArrowHit(point);
+            return;
         }
 
-        arrow.DebugLaunch(origin, dir, speed);
+        Debug.Log(hasHit ? $"[TestShooter] Raté : touché '{hit.collider.name}'." : "[TestShooter] Raté : rien touché.");
+        if (sm != null) sm.RegisterMiss();
+    }
+
+    bool TryRaycast(Ray ray, out RaycastHit best)
+    {
+        best = default;
+        bool found = false;
+        foreach (var h in Physics.RaycastAll(ray, range, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+        {
+            if (h.collider.GetComponentInParent<ArrowHit>() != null) continue;      // les flèches posées dans la scène
+            if (rig != null && h.collider.transform.IsChildOf(rig)) continue;       // le joueur lui-même
+            if (!found || h.distance < best.distance) { best = h; found = true; }
+        }
+        return found;
+    }
+
+    void Tracer(Vector3 from, Vector3 to)
+    {
+        if (tracerMaterial == null)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Unlit");
+            tracerMaterial = new Material(shader != null ? shader : Shader.Find("Sprites/Default"));
+            tracerMaterial.color = new Color(1f, 0.85f, 0.2f);
+        }
+        var go = new GameObject("Tir");
+        var lr = go.AddComponent<LineRenderer>();
+        lr.sharedMaterial = tracerMaterial;
+        lr.positionCount = 2;
+        lr.SetPosition(0, from);
+        lr.SetPosition(1, to);
+        lr.startWidth = 0.02f;
+        lr.endWidth = 0.05f;
+        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        Destroy(go, 0.12f);
     }
 
     /// <summary>
@@ -125,12 +177,6 @@ public class TestShooter : MonoBehaviour
         {
             if (!c.isActiveAndEnabled || c.targetTexture != null || c.targetDisplay != 0) continue;
             if (best == null || c.depth > best.depth || (c.depth == best.depth && c == Camera.main)) best = c;
-        }
-        if (Camera.allCamerasCount > 1)
-        {
-            var names = new System.Text.StringBuilder();
-            foreach (var c in Camera.allCameras) names.Append($" '{c.name}'");
-            Debug.LogWarning($"[TestShooter] Plusieurs caméras actives dans la scène :{names}. Garde seulement celle du joueur (XR Origin).");
         }
         return best != null ? best : Camera.main;
     }
@@ -191,31 +237,5 @@ public class TestShooter : MonoBehaviour
             Physics.SyncTransforms();
         }
         inBoardView = false;
-    }
-
-    // ---------- Visée ----------
-
-    bool TryGetAimPoint(Ray ray, out Vector3 point)
-    {
-        point = default;
-        float best = float.MaxValue;
-        foreach (var h in Physics.RaycastAll(ray, 500f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
-        {
-            if (h.collider.transform.IsChildOf(arrow.transform)) continue;
-            if (h.distance < best) { best = h.distance; point = h.point; }
-        }
-
-        // Les oiseaux bonus n'ont pas de collider : on vise le centre de celui qui est sous la souris
-        foreach (var bird in BirdTarget.All)
-        {
-            if (bird == null || bird.IsHit) continue;
-            Vector3 c = bird.Center;
-            float t = Vector3.Dot(c - ray.origin, ray.direction);
-            if (t <= 0f || t >= best) continue;
-            if ((ray.origin + ray.direction * t - c).sqrMagnitude > bird.hitRadius * bird.hitRadius) continue;
-            best = t;
-            point = c;
-        }
-        return best < float.MaxValue;
     }
 }

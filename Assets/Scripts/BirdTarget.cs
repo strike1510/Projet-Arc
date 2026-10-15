@@ -23,6 +23,12 @@ public class BirdTarget : MonoBehaviour
     [Tooltip("Rayon de la zone touchable autour du centre de l'oiseau (m). Plus grand = plus facile.")]
     public float hitRadius = 0.3f;
 
+    public enum Reaction { SEnvole, Eclate }
+
+    [Header("Quand on le touche")]
+    [Tooltip("SEnvole : l'oiseau s'enfuit. Eclate : l'objet disparaît d'un coup (pomme...).")]
+    public Reaction reaction = Reaction.SEnvole;
+
     [Header("Envol")]
     [Tooltip("Vitesse de l'envol (m/s).")]
     public float flySpeed = 7f;
@@ -114,7 +120,8 @@ public class BirdTarget : MonoBehaviour
         Debug.Log($"[BirdTarget] Oiseau '{name}' touché : +{points}", this);
 
         if (showPopup) StartCoroutine(Popup(Center));
-        StartCoroutine(FlyAway(arrowDirection));
+        if (reaction == Reaction.Eclate) StartCoroutine(Burst());
+        else StartCoroutine(FlyAway(arrowDirection));
     }
 
     IEnumerator FlyAway(Vector3 arrowDirection)
@@ -168,6 +175,22 @@ public class BirdTarget : MonoBehaviour
         foreach (var c in colliders) if (c != null) c.enabled = true;
 
         gameObject.SetActive(false);
+    }
+
+    IEnumerator Burst()
+    {
+        // Petit "pop" : gonfle puis disparaît
+        foreach (var c in GetComponentsInChildren<Collider>()) c.enabled = false;
+        var rb = GetComponent<Rigidbody>();
+        if (rb != null) rb.isKinematic = true;
+
+        Vector3 s0 = transform.localScale;
+        for (float k = 0f; k < 1f; k += Time.deltaTime / 0.15f)
+        {
+            transform.localScale = s0 * (k < 0.5f ? Mathf.Lerp(1f, 1.4f, k * 2f) : Mathf.Lerp(1.4f, 0.05f, (k - 0.5f) * 2f));
+            yield return null;
+        }
+        Destroy(gameObject);
     }
 
     static bool HasBool(Animator a, string name)

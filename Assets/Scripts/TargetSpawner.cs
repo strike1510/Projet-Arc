@@ -24,7 +24,15 @@ public class TargetSpawner : MonoBehaviour
     [Tooltip("Les points de ces cibles sont multipliés (2 = deux fois plus de points que les cibles fixes).")]
     public int pointsMultiplier = 2;
 
+    public enum Appear { Grossir, SortDuSol }
+
     [Header("Apparition")]
+    [Tooltip("Grossir : la cible apparaît en l'air en grossissant. SortDuSol : elle sort de terre en glissant, puis y rentre.")]
+    public Appear appearMode = Appear.Grossir;
+
+    [Tooltip("SortDuSol : durée de la sortie et de la rentrée (s).")]
+    public float slideTime = 0.6f;
+
     [Tooltip("Temps entre deux apparitions (s), tiré au hasard entre ces deux valeurs.")]
     public Vector2 spawnInterval = new Vector2(3f, 6f);
 
@@ -97,11 +105,13 @@ public class TargetSpawner : MonoBehaviour
             float groundY = eye.y - 1.6f;
             if (Physics.Raycast(pos + Vector3.up * 50f, Vector3.down, out RaycastHit ground, 200f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
                 groundY = ground.point.y;
-            pos.y = groundY + Random.Range(heightAboveGround.x, heightAboveGround.y);
+            bool fromGround = appearMode == Appear.SortDuSol;
+            pos.y = fromGround ? groundY : groundY + Random.Range(heightAboveGround.x, heightAboveGround.y);
 
             // Pas dans un arbre ou un rocher, et visible depuis le joueur
-            if (Physics.CheckSphere(pos, clearRadius, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
-            if (Physics.Linecast(eye, pos, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
+            Vector3 check = fromGround ? pos + Vector3.up * 1.2f : pos;
+            if (Physics.CheckSphere(check, clearRadius, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
+            if (Physics.Linecast(eye, check, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
 
             Spawn(pos, dir);
             Debug.Log($"[TargetSpawner] Cible apparue à {Vector3.Distance(eye, pos):0.0} m de la caméra '{cam.name}'.");
@@ -113,8 +123,18 @@ public class TargetSpawner : MonoBehaviour
     {
         Quaternion rot = Quaternion.LookRotation(dirFromPlayer) * Quaternion.Euler(0f, faceYawOffset, 0f);
         var t = Instantiate(targetPrefab, pos, rot);
-        t.transform.localScale = Vector3.one * targetScale * 0.02f;
         t.name = "Cible apparue";
+
+        if (appearMode == Appear.SortDuSol)
+        {
+            t.transform.localScale = Vector3.one * targetScale;
+            if (pointsMultiplier != 1)
+                for (int i = 0; i < t.ringPoints.Length; i++) t.ringPoints[i] *= pointsMultiplier;
+            alive.Add(t.gameObject);
+            StartCoroutine(GroundLife(t.transform, pos));
+            return;
+        }
+        t.transform.localScale = Vector3.one * targetScale * 0.02f;
 
         if (pointsMultiplier != 1)
             for (int i = 0; i < t.ringPoints.Length; i++) t.ringPoints[i] *= pointsMultiplier;
@@ -155,6 +175,9 @@ public class TargetSpawner : MonoBehaviour
         }
         if (t == null) yield break;
 
+        // Les flèches plantées dedans tombent au lieu de disparaître avec la cible
+        foreach (var arrow in t.GetComponentsInChildren<ArrowHit>(true)) arrow.Unstick();
+
         // Disparition : rétrécit en 0,3 s
         for (float k = 0f; k < 1f && t != null; k += Time.deltaTime / 0.3f)
         {
@@ -163,15 +186,55 @@ public class TargetSpawner : MonoBehaviour
         }
         if (t == null) yield break;
 
-        // Les flèches plantées dedans tombent au lieu de disparaître avec la cible
+        alive.Remove(t.gameObject);
+        Destroy(t.gameObject);
+    }
+
+    /// <summary>Cible qui sort du sol en glissant, reste, puis rentre dans le sol.</summary>
+    IEnumerator GroundLife(Transform t, Vector3 groundPoint)
+    {
+        // Hauteur de la cible : on la place pour que son bas touche le sol une fois sortie
+        float bottom = t.position.y, top = t.position.y;
+        foreach (var r in t.GetComponentsInChildren<Renderer>())
+        {
+            bottom = Mathf.Min(bottom, r.bounds.min.y);
+            top = Mathf.Max(top, r.bounds.max.y);
+        }
+        Vector3 up = groundPoint + Vector3.up * (t.position.y - bottom);   // sortie
+        Vector3 down = up - Vector3.up * (top - bottom + 0.2f);             // cachée sous terre
+        t.position = down;
+
+        yield return Slide(t, down, up);
+        if (t == null) yield break;
+
+        for (float left = Mathf.Max(0f, lifetime - 2f * slideTime); left > 0f && t != null; )
+        {
+            var sm = ScoreManager.Instance;
+            if (sm == null || !sm.IsRoundOver) left -= Time.deltaTime;
+            yield return null;
+        }
+        if (t == null) yield break;
+
         foreach (var arrow in t.GetComponentsInChildren<ArrowHit>(true)) arrow.Unstick();
+        yield return Slide(t, up, down);
+        if (t == null) yield break;
 
         alive.Remove(t.gameObject);
         Destroy(t.gameObject);
     }
 
+    IEnumerator Slide(Transform t, Vector3 from, Vector3 to)
+    {
+        for (float k = 0f; k < 1f && t != null; k += Time.deltaTime / Mathf.Max(0.05f, slideTime))
+        {
+            t.position = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, k));
+            yield return null;
+        }
+        if (t != null) t.position = to;
+    }
+
     /// <summary>La caméra du joueur (celle affichée à l'écran), même si un pack a ajouté une autre "Main Camera".</summary>
-    static Camera FindGameViewCamera()
+    public static Camera FindGameViewCamera()
     {
         Camera best = null;
         foreach (var c in Camera.allCameras)
