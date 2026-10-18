@@ -105,6 +105,7 @@ public class MainMenu : MonoBehaviour
 
     public void SelectLevel(int index)
     {
+        Debug.Log($"[MainMenu] Clic sur le niveau {index + 1} (prénom : '{playerName}', scène : '{(index >= 0 && index < levelScenes.Length ? levelScenes[index] : "")}').");
         HighlightLevel(index);
         if (selectedLevel < 0) return;
 
@@ -211,7 +212,13 @@ public class MainMenu : MonoBehaviour
         {
             if (levelRecordTexts[level] == null) continue;
             var top = Leaderboard.Get(level);
-            levelRecordTexts[level].text = top.Count > 0 ? string.Format(recordFormat, top[0].name, top[0].score) : noRecordText;
+            string record = top.Count > 0 ? string.Format(recordFormat, top[0].name, top[0].score) : noRecordText;
+
+            // Le nom du niveau d'abord, le record en dessous — dans le même texte si le bouton n'en a qu'un
+            var title = level < levelTitleTexts.Length ? levelTitleTexts[level] : null;
+            bool sameText = title == null || title == levelRecordTexts[level];
+            string levelName = level < levelNames.Length ? levelNames[level] : $"Niveau {level + 1}";
+            levelRecordTexts[level].text = sameText ? $"<b>{levelName}</b>\n<size=75%>{record}</size>" : record;
         }
 
         // Top 3 détaillé (si des textes sont renseignés)
@@ -233,6 +240,7 @@ public class MainMenu : MonoBehaviour
     void SetMessage(string msg)
     {
         if (messageText != null) messageText.text = msg;
+        if (!string.IsNullOrEmpty(msg)) Debug.Log($"[MainMenu] {msg}");
     }
 
     // ---------- Clavier ----------

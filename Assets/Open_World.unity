@@ -8741,9 +8741,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenu
   levelScenes:
-  - 
-  - 
-  - 
+  - Niveau1
+  - Niveau2
+  - Niveau3
   levelNames:
   - Niveau 1
   - Niveau 2
