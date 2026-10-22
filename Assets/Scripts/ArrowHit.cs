@@ -33,7 +33,6 @@ public class ArrowHit : MonoBehaviour
     bool grabbedWhileStuck;
     bool wasMoving;        // la flèche a déjà bougé depuis le tir (physique active)
     float flightTime;
-    bool gravityWarned;
     Vector3 previousTip;
     Vector3 lastDir = Vector3.forward;   // dernière direction de vol connue
     bool bonus;            // flèche bonus (tir triple) : ne consomme pas de flèche de la manche
@@ -135,11 +134,11 @@ public class ArrowHit : MonoBehaviour
         }
         wasMoving = true;
 
-        if (!rb.useGravity && !gravityWarned && (arrow.bow == null || !arrow.bow.noGravity))
-        {
-            gravityWarned = true;
-            Debug.LogWarning($"[ArrowHit] La gravité de '{name}' est coupée pendant le vol : la flèche vole tout droit. Vérifie Use Gravity sur son Rigidbody ou un autre script qui la coupe.", this);
-        }
+        // Gravité imposée pendant tout le vol, selon l'arc qui a tiré (Bow_Fulminaleuse : aucune).
+        // D'autres scripts (XR Grab, remise en physique après reprise en main) la remettent parfois :
+        // on la corrige ici, avant chaque pas physique, pour que la flèche suive exactement le trait de visée.
+        bool wantGravity = arrow.bow == null || !arrow.bow.noGravity;
+        if (rb.useGravity != wantGravity) rb.useGravity = wantGravity;
 
         flightTime += Time.fixedDeltaTime;
         Vector3 velocity = rb.linearVelocity;
@@ -333,7 +332,6 @@ public class ArrowHit : MonoBehaviour
         stuck = false;
         wasMoving = false;
         flightTime = 0f;
-        gravityWarned = false;
         previousTip = arrow.tip.position;
         transform.SetParent(null, true);
 
@@ -346,8 +344,7 @@ public class ArrowHit : MonoBehaviour
 
     void StickInto(RaycastHit hit, Vector3 dir)
     {
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
+        if (!rb.isKinematic) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
         rb.isKinematic = true;
 
         // Place la pointe juste dans la surface touchée
@@ -398,8 +395,7 @@ public class ArrowHit : MonoBehaviour
 
         Vector3 point = collision.contactCount > 0 ? collision.GetContact(0).point : arrow.tip.position;
 
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
+        if (!rb.isKinematic) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
         rb.isKinematic = true;
 
         var target = collision.collider.GetComponentInParent<Target>();
@@ -449,7 +445,7 @@ public class ArrowHit : MonoBehaviour
     IEnumerator RestorePhysics()
     {
         yield return new WaitForFixedUpdate();
-        if (stuck || grab.isSelected) yield break;
+        if (stuck || grab.isSelected || flying) yield break;   // tirée : c'est le tir qui règle la physique
         rb.isKinematic = false;
         rb.useGravity = true;
     }
