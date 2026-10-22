@@ -26,6 +26,10 @@ public class BowController : MonoBehaviour
     [Tooltip("La flèche lâche des étincelles électriques en vol (Particle System \"Étincelles\" de la flèche).")]
     public bool trailSparks = false;
 
+    [Header("Tir")]
+    [Tooltip("Les flèches tirées par cet arc volent tout droit (pas de gravité), ex. Bow_Fulminaleuse.")]
+    public bool noGravity = false;
+
     [HideInInspector] public ArrowController nockedArrow; // flèche encochée, null si aucune
 
     /// <summary>Une flèche vient d'être tirée par cet arc : (flèche, direction, vitesse, position de l'encoche de la flèche au départ).</summary>

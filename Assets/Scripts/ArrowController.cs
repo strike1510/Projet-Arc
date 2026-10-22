@@ -83,9 +83,28 @@ public class ArrowController : MonoBehaviour
             bow = b;
             nocked = true;
             bow.nockedArrow = this;
+            IgnoreBow(b);
             grab.trackPosition = false;
             grab.trackRotation = false;
             return;
+        }
+    }
+
+    BowController ignoredBow;
+
+    /// <summary>
+    /// La flèche encochée traverse le corps de l'arc : sans ça, au lâcher, le moteur physique la repousse
+    /// hors des colliders de l'arc et elle part de travers (elle ne suit plus la trajectoire affichée).
+    /// </summary>
+    void IgnoreBow(BowController b)
+    {
+        if (ignoredBow == b) return;
+        ignoredBow = b;
+        var mine = GetComponentsInChildren<Collider>(true);
+        foreach (var c in b.GetComponentsInChildren<Collider>(true))
+        {
+            if (c.GetComponentInParent<ArrowController>(true) != null) continue;   // flèches posées sur l'arc
+            foreach (var m in mine) Physics.IgnoreCollision(m, c, true);
         }
     }
 
@@ -120,7 +139,8 @@ public class ArrowController : MonoBehaviour
     {
         yield return new WaitForFixedUpdate();
         rb.isKinematic = false;
-        rb.useGravity = true;
+        rb.useGravity = bow == null || !bow.noGravity;   // Bow_Fulminaleuse : tout droit
+        rb.angularVelocity = Vector3.zero;
         rb.linearVelocity = dir * speed;
         flying = true;
     }

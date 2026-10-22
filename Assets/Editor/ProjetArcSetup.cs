@@ -372,6 +372,7 @@ public static partial class ProjetArcSetup
             bow.trailTime = st.trailTime;
             bow.trailFlicker = st.flicker;
             bow.trailSparks = st.electric;
+            bow.noGravity = type == ArcheryTypes.Fulminaleuse;   // tire tout droit
             bow.trailMaterial = st.electric ? ElectricTrailMaterial() : null;
             SetupBowElectricity(bow, st.electric);
             EditorUtility.SetDirty(bow);

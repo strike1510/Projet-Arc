@@ -135,7 +135,7 @@ public class ArrowHit : MonoBehaviour
         }
         wasMoving = true;
 
-        if (!rb.useGravity && !gravityWarned)
+        if (!rb.useGravity && !gravityWarned && (arrow.bow == null || !arrow.bow.noGravity))
         {
             gravityWarned = true;
             Debug.LogWarning($"[ArrowHit] La gravité de '{name}' est coupée pendant le vol : la flèche vole tout droit. Vérifie Use Gravity sur son Rigidbody ou un autre script qui la coupe.", this);
@@ -273,7 +273,7 @@ public class ArrowHit : MonoBehaviour
 
         transform.SetParent(null, true);
         rb.isKinematic = false;
-        rb.useGravity = true;
+        rb.useGravity = arrow.bow == null || !arrow.bow.noGravity;
 
         Vector3 axis = (arrow.tip.position - arrow.grabPoint.position).normalized;
         transform.rotation = Quaternion.FromToRotation(axis, dir) * transform.rotation;
@@ -304,7 +304,7 @@ public class ArrowHit : MonoBehaviour
         Physics.SyncTransforms();
 
         rb.isKinematic = false;
-        rb.useGravity = true;
+        rb.useGravity = fromBow == null || !fromBow.noGravity;
         rb.angularVelocity = Vector3.zero;
         rb.linearVelocity = dir * speed;
         StartFlight(true);
@@ -366,6 +366,7 @@ public class ArrowHit : MonoBehaviour
     void EndFlight(Target target, Vector3 point = default)
     {
         flying = false;
+        if (!rb.isKinematic) rb.useGravity = true;   // flèche sans gravité (Fulminaleuse) ratée : elle retombe
 
         if (!counted) return;
         counted = false;

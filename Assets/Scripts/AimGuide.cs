@@ -59,9 +59,17 @@ public class AimGuide : MonoBehaviour
 
         Vector3 dir = bow.arrowNock.forward;
         float speed = arrow.LaunchSpeed;
-        Vector3 start = arrow.tip != null ? arrow.tip.position : arrow.transform.position;
+        Vector3 g = bow.noGravity ? Vector3.zero : Physics.gravity;
 
-        bool hit = Draw(line, start, dir * speed, out Vector3 end, out Vector3 normal);
+        // La physique déplace le pivot de la flèche (son Rigidbody) ; ArrowHit garde la flèche alignée sur sa vitesse.
+        // On simule donc le pivot, et la pointe = pivot + décalage le long de la flèche, comme pendant le vol.
+        Vector3 pivot = arrow.transform.position;
+        Vector3 tip = arrow.tip != null ? arrow.tip.position : pivot;
+        Vector3 axis = arrow.tip != null && arrow.grabPoint != null ? (arrow.tip.position - arrow.grabPoint.position).normalized : dir;
+        float along = Vector3.Dot(tip - pivot, axis);
+        Vector3 perp = (tip - pivot) - axis * along;
+
+        bool hit = Draw(line, pivot, along, perp, dir * speed, g, out Vector3 end, out Vector3 normal);
         if (impactMarker != null)
         {
             impactMarker.gameObject.SetActive(hit);
@@ -80,39 +88,49 @@ public class AimGuide : MonoBehaviour
             up.Normalize();
             Vector3 right = Vector3.Cross(up, dir).normalized;
             float sideSpeed = speed * triple.speedFactor;
-            if (leftLine != null) Draw(leftLine, start - right * triple.sideOffset, Quaternion.AngleAxis(-triple.spreadAngle, up) * dir * sideSpeed, out _, out _);
-            if (rightLine != null) Draw(rightLine, start + right * triple.sideOffset, Quaternion.AngleAxis(triple.spreadAngle, up) * dir * sideSpeed, out _, out _);
+            if (leftLine != null) Draw(leftLine, pivot - right * triple.sideOffset, along, perp, Quaternion.AngleAxis(-triple.spreadAngle, up) * dir * sideSpeed, g, out _, out _);
+            if (rightLine != null) Draw(rightLine, pivot + right * triple.sideOffset, along, perp, Quaternion.AngleAxis(triple.spreadAngle, up) * dir * sideSpeed, g, out _, out _);
         }
     }
 
-    /// <summary>Calcule la courbe et la met dans le trait. Renvoie true si elle touche quelque chose.</summary>
-    bool Draw(LineRenderer lr, Vector3 p, Vector3 v, out Vector3 end, out Vector3 normal)
+    /// <summary>
+    /// Même calcul que le moteur physique (pas fixe Time.fixedDeltaTime, vitesse puis position),
+    /// pour que le trait tombe exactement là où la flèche ira. Renvoie true si la courbe touche quelque chose.
+    /// </summary>
+    bool Draw(LineRenderer lr, Vector3 pivot, float along, Vector3 perp, Vector3 v, Vector3 g, out Vector3 end, out Vector3 normal)
     {
-        end = p; normal = Vector3.up;
+        normal = Vector3.up;
+        Vector3 tip = pivot + (v.sqrMagnitude > 1e-6f ? v.normalized : Vector3.forward) * along + perp;
+        end = tip;
         if (lr == null) return false;
 
+        float dt = Time.fixedDeltaTime;
         int count = 0;
-        points[count++] = p;
+        points[count++] = tip;
         bool touched = false;
-        Vector3 g = Physics.gravity;
-        int steps = Mathf.Min(points.Length - 1, Mathf.CeilToInt(maxTime / Mathf.Max(0.005f, timeStep)));
+        int steps = Mathf.CeilToInt(maxTime / dt);
+        int every = Mathf.Max(Mathf.Max(1, Mathf.RoundToInt(timeStep / dt)), Mathf.CeilToInt(steps / (points.Length - 4f)));   // un point du trait tous les 'every' pas
 
-        for (int i = 0; i < steps; i++)
+        Vector3 p = pivot;
+        Vector3 lastDrawn = tip;
+        for (int i = 1; i <= steps; i++)
         {
-            Vector3 next = p + v * timeStep + 0.5f * g * timeStep * timeStep;
-            v += g * timeStep;
+            v += g * dt;          // comme PhysX : la vitesse d'abord...
+            p += v * dt;          // ...puis la position
+            Vector3 next = p + (v.sqrMagnitude > 1e-6f ? v.normalized : Vector3.forward) * along + perp;
 
-            if (Cast(p, next, out RaycastHit h))
+            if (Cast(tip, next, out RaycastHit h))
             {
                 points[count++] = h.point;
                 end = h.point; normal = h.normal;
                 touched = true;
                 break;
             }
-            points[count++] = next;
-            p = next;
-            end = p;
+            tip = next;
+            end = tip;
+            if (i % every == 0 && count < points.Length - 2) { points[count++] = tip; lastDrawn = tip; }
         }
+        if (!touched && end != lastDrawn && count < points.Length) points[count++] = end;
 
         lr.positionCount = count;
         for (int i = 0; i < count; i++) lr.SetPosition(i, points[i]);
