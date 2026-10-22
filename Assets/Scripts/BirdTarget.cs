@@ -109,12 +109,14 @@ public class BirdTarget : MonoBehaviour
     }
 
     /// <summary>Appelé par la flèche qui touche l'oiseau.</summary>
-    public void OnArrowHit(Vector3 point, Vector3 arrowDirection)
+    public void OnArrowHit(Vector3 point, Vector3 arrowDirection) => OnArrowHit(point, arrowDirection, false);
+
+    public void OnArrowHit(Vector3 point, Vector3 arrowDirection, bool bonus)
     {
         if (hit) return;
         hit = true;
 
-        if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterHit(points, false);
+        if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterHit(points, false, bonus);
         else Debug.LogWarning("[BirdTarget] Pas de ScoreManager dans la scène : point non compté.");
 
         Debug.Log($"[BirdTarget] Oiseau '{name}' touché : +{points}", this);
@@ -148,6 +150,7 @@ public class BirdTarget : MonoBehaviour
         if (rb != null) rb.isKinematic = true;
 
         // Animation de vol
+        if (animator != null && HasBool(animator, "landing")) animator.SetBool("landing", false);
         if (animator != null && HasBool(animator, flyingAnimatorBool)) animator.SetBool(flyingAnimatorBool, true);
 
         // Direction : dans le sens de la flèche (il fuit), vers le haut
@@ -190,7 +193,10 @@ public class BirdTarget : MonoBehaviour
             transform.localScale = s0 * (k < 0.5f ? Mathf.Lerp(1f, 1.4f, k * 2f) : Mathf.Lerp(1.4f, 0.05f, (k - 0.5f) * 2f));
             yield return null;
         }
-        Destroy(gameObject);
+        // Remis en réserve (désactivé) plutôt que détruit : l'objet reste dans la scène
+        transform.localScale = s0;
+        foreach (var c in GetComponentsInChildren<Collider>(true)) c.enabled = true;
+        gameObject.SetActive(false);
     }
 
     static bool HasBool(Animator a, string name)

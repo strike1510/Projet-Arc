@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 /// Tir instantané (pas de flèche, pas de physique) : ce qui est sous la souris est touché.
 ///   Clic gauche ou Espace : tire là où pointe la souris (cible → points au-dessus, oiseau/pomme → bonus).
 ///   N : manche suivante quand la manche est finie.
+///   B (ou 1 / 2 / 3 / 4) : choisit l'arc (Base, Bio, Fulminaleuse, Monkey) ; F : tire une VRAIE flèche avec cet arc
+///   vers la souris (traînée de l'arc, tir triple du Bow_Monkey, points comptés).
 ///   Clic sur le panneau des résultats : la caméra se place en face pour le lire (et cliquer ses boutons).
 ///   Clic droit ou Échap : retour à la position de tir (automatique quand une nouvelle manche commence).
 /// Les points passent par le vrai chemin : Target / BirdTarget → ScoreManager.
@@ -32,7 +34,7 @@ public class TestShooter : MonoBehaviour
     void Start()
     {
         cam = FindGameViewCamera();
-        Debug.Log($"[TestShooter] Tir instantané avec la caméra '{(cam != null ? cam.name : "aucune")}'. Clic gauche pour tirer, clic sur le panneau pour le lire.", cam);
+        Debug.Log($"[TestShooter] Tir instantané avec la caméra '{(cam != null ? cam.name : "aucune")}'. Clic gauche pour tirer, clic sur le panneau pour le lire, B (ou 1-4) + F pour une vraie flèche.", cam);
 
         if (cam != null)
         {
@@ -57,6 +59,22 @@ public class TestShooter : MonoBehaviour
         var sm = ScoreManager.Instance;
         var mouse = Mouse.current;
         var kb = Keyboard.current;
+
+        // 1-4 : arc de test, F : vraie flèche
+        if (kb != null)
+        {
+            if (kb.digit1Key.wasPressedThisFrame) SelectBow(ArcheryTypes.Base);
+            if (kb.digit2Key.wasPressedThisFrame) SelectBow(ArcheryTypes.Bio);
+            if (kb.digit3Key.wasPressedThisFrame) SelectBow(ArcheryTypes.Fulminaleuse);
+            if (kb.digit4Key.wasPressedThisFrame) SelectBow(ArcheryTypes.Monkey);
+            if (kb.bKey.wasPressedThisFrame)
+                SelectBow(ArcheryTypes.All[(System.Array.IndexOf(ArcheryTypes.All, testBowType) + 1) % ArcheryTypes.All.Length]);
+            if (kb.fKey.wasPressedThisFrame && !inBoardView)
+            {
+                Vector2 sp = mouse != null ? mouse.position.ReadValue() : new Vector2(Screen.width / 2f, Screen.height / 2f);
+                FireRealArrow(cam.ScreenPointToRay(sp));
+            }
+        }
 
         // N : manche suivante
         if (kb != null && kb.nKey.wasPressedThisFrame && sm != null && sm.IsRoundOver)
@@ -91,6 +109,49 @@ public class TestShooter : MonoBehaviour
         if (sm != null && (sm.IsRoundOver || sm.RoundStartFrame == Time.frameCount)) return;
 
         Shoot(ray);
+    }
+
+    // ---------- Vraie flèche (test des arcs sans casque) ----------
+
+    string testBowType = ArcheryTypes.Base;
+
+    void SelectBow(string type)
+    {
+        testBowType = type;
+        Debug.Log($"[TestShooter] Arc de test : {type} (F pour tirer).");
+    }
+
+    void FireRealArrow(Ray ray)
+    {
+        BowController bow = null;
+        foreach (var b in BowController.All) if (ArcheryTypes.Of(b.name) == testBowType) { bow = b; break; }
+        if (bow == null) { Debug.Log($"[TestShooter] Pas d'arc {testBowType} dans la scène."); return; }
+
+        // Une flèche du même type, libre (pas en main, pas en vol, pas une flèche latérale du tir triple)
+        ArrowController pick = null;
+        foreach (var a in FindObjectsByType<ArrowController>(FindObjectsInactive.Include))
+        {
+            if (ArcheryTypes.Of(a.name) != testBowType || a.name.Contains("tir triple")) continue;
+            if (a.IsHeld || a.IsNocked) continue;
+            var h = a.GetComponent<ArrowHit>();
+            if (h == null || h.IsFlying) continue;
+            pick = a;
+            if (!a.gameObject.activeInHierarchy) break;   // de préférence une flèche du carquois
+        }
+        if (pick == null) { Debug.Log($"[TestShooter] Aucune flèche {testBowType} libre."); return; }
+
+        if (!pick.gameObject.activeInHierarchy)
+        {
+            pick.transform.SetParent(null, true);
+            pick.gameObject.SetActive(true);
+        }
+        pick.bow = bow;   // la traînée prend le style de cet arc
+
+        Vector3 origin = ray.origin + ray.direction * 0.6f + cam.transform.right * 0.12f - cam.transform.up * 0.12f;
+        Vector3 dir = ray.direction;
+        float speed = bow.maxSpeed;
+        pick.GetComponent<ArrowHit>().DebugLaunch(origin, dir, speed);
+        bow.NotifyFired(pick, dir, speed, origin);
     }
 
     // ---------- Tir instantané ----------
@@ -187,7 +248,7 @@ public class TestShooter : MonoBehaviour
     {
         board = null;
         float best = float.MaxValue;
-        foreach (var rb in FindObjectsByType<ResultsBoard>(FindObjectsSortMode.None))
+        foreach (var rb in FindObjectsByType<ResultsBoard>())
         {
             var canvas = rb.GetComponentInParent<Canvas>();
             if (canvas == null) canvas = rb.GetComponentInChildren<Canvas>();

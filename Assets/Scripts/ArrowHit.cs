@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -35,6 +36,17 @@ public class ArrowHit : MonoBehaviour
     bool gravityWarned;
     Vector3 previousTip;
     Vector3 lastDir = Vector3.forward;   // dernière direction de vol connue
+    bool bonus;            // flèche bonus (tir triple) : ne consomme pas de flèche de la manche
+
+    /// <summary>Vrai pendant le vol (entre le tir et l'impact).</summary>
+    public bool IsFlying => flying;
+    /// <summary>Vrai quand la flèche est plantée quelque part.</summary>
+    public bool IsStuck => stuck;
+    /// <summary>Vrai si ce tir est une flèche bonus (tir triple).</summary>
+    public bool IsBonus => bonus;
+
+    /// <summary>La flèche part : (cette flèche, arc qui l'a tirée ou null).</summary>
+    public event Action<ArrowHit, BowController> FlightStarted;
 
     void Awake()
     {
@@ -61,6 +73,37 @@ public class ArrowHit : MonoBehaviour
         wasNocked = nocked;
     }
 
+    // ---------- Flèche plantée : elle suit ce qu'elle a touché (cible qui bouge) sans changer d'orientation ----------
+
+    Transform pinTo;                 // objet dans lequel la flèche est plantée
+    Vector3 pinLocalPos;             // position de la flèche dans le repère de cet objet
+    Quaternion pinLocalRot;          // orientation de la flèche dans le repère de cet objet
+    bool pinned;
+    RigidbodyInterpolation savedInterpolation;
+
+    /// <summary>Fige la flèche sur 'to' : à chaque image elle est replacée exactement au même endroit de l'objet.</summary>
+    void Pin(Transform to)
+    {
+        if (to == null) { Unpin(); return; }
+        if (!pinned) savedInterpolation = rb.interpolation;
+        // Pas d'interpolation sur une flèche figée : sinon le Rigidbody réécrit sa propre position
+        // et la flèche "glisse" ou tourne quand la cible bouge
+        rb.interpolation = RigidbodyInterpolation.None;
+        pinTo = to;
+        pinLocalPos = to.InverseTransformPoint(transform.position);
+        pinLocalRot = Quaternion.Inverse(to.rotation) * transform.rotation;
+        pinned = true;
+        arrow.pinned = true;
+    }
+
+    void Unpin()
+    {
+        if (pinned && rb != null) rb.interpolation = savedInterpolation;
+        pinned = false;
+        pinTo = null;
+        if (arrow != null) arrow.pinned = false;
+    }
+
     void LateUpdate()
     {
         // Une flèche plantée par notre raycast reste figée (ArrowController ne connaît que ses propres impacts)
@@ -69,6 +112,13 @@ public class ArrowHit : MonoBehaviour
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.isKinematic = true;
+        }
+
+        // Plantée dans une cible qui bouge : même position et même sens par rapport à la cible
+        if (pinned)
+        {
+            if (!stuck || grab.isSelected || pinTo == null) { Unpin(); return; }
+            transform.SetPositionAndRotation(pinTo.TransformPoint(pinLocalPos), pinTo.rotation * pinLocalRot);
         }
     }
 
@@ -85,7 +135,7 @@ public class ArrowHit : MonoBehaviour
         }
         wasMoving = true;
 
-        if (!rb.useGravity && !gravityWarned)
+        if (!rb.useGravity && !gravityWarned && (arrow.bow == null || !arrow.bow.noGravity))
         {
             gravityWarned = true;
             Debug.LogWarning($"[ArrowHit] La gravité de '{name}' est coupée pendant le vol : la flèche vole tout droit. Vérifie Use Gravity sur son Rigidbody ou un autre script qui la coupe.", this);
@@ -128,6 +178,8 @@ public class ArrowHit : MonoBehaviour
         foreach (var h in hits)
         {
             if (h.collider.transform.IsChildOf(transform)) continue;                    // la flèche elle-même
+            if (h.collider.GetComponentInParent<ArrowHit>() != null) continue;          // une autre flèche
+            if (IsPlayer(h.collider)) continue;                                          // le joueur lui-même
             if (arrow.bow != null && h.collider.transform.IsChildOf(arrow.bow.transform)) continue;    // l'arc
             if (closest == null || h.distance < closest.Value.distance) closest = h;
         }
@@ -167,6 +219,7 @@ public class ArrowHit : MonoBehaviour
         foreach (var h in Physics.RaycastAll(start, lastDir, 1.5f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
         {
             if (h.collider.transform.IsChildOf(transform)) continue;
+            if (h.collider.GetComponentInParent<ArrowHit>() != null) continue;
             if (arrow.bow != null && h.collider.transform.IsChildOf(arrow.bow.transform)) continue;
             var t = h.collider.GetComponentInParent<Target>();
             if (t == null || h.distance >= best) continue;
@@ -189,6 +242,7 @@ public class ArrowHit : MonoBehaviour
         {
             transform.SetParent(target.transform, true);
             stuck = true;
+            Pin(target.transform);
             Debug.Log($"[ArrowHit] Flèche plantée par ArrowController dans la cible '{target.name}' : impact compté.", target);
         }
         else Debug.Log("[ArrowHit] Flèche arrêtée par un autre script, aucune cible autour : raté.");
@@ -205,7 +259,7 @@ public class ArrowHit : MonoBehaviour
         flying = false;
         if (!counted) return;
         counted = false;
-        bird.OnArrowHit(point, dir);
+        bird.OnArrowHit(point, dir, bonus);
     }
 
     /// <summary>
@@ -219,7 +273,7 @@ public class ArrowHit : MonoBehaviour
 
         transform.SetParent(null, true);
         rb.isKinematic = false;
-        rb.useGravity = true;
+        rb.useGravity = arrow.bow == null || !arrow.bow.noGravity;
 
         Vector3 axis = (arrow.tip.position - arrow.grabPoint.position).normalized;
         transform.rotation = Quaternion.FromToRotation(axis, dir) * transform.rotation;
@@ -230,8 +284,51 @@ public class ArrowHit : MonoBehaviour
         StartFlight();
     }
 
-    void StartFlight()
+    /// <summary>
+    /// Lance la flèche depuis 'origin' (position de son encoche) dans la direction 'dir'.
+    /// Utilisé par le tir triple du Bow_Monkey : les deux flèches latérales sont des flèches bonus
+    /// (elles ne consomment pas de flèche de la manche, mais leurs points comptent).
+    /// </summary>
+    public void LaunchBonus(Vector3 origin, Vector3 dir, float speed, BowController fromBow)
     {
+        if (grab.isSelected) return;
+        if (flying) EndFlight(null);
+
+        arrow.ResetForReuse();
+        arrow.bow = fromBow;   // ignore l'arc dans les collisions
+        transform.SetParent(null, true);
+
+        Vector3 axis = (arrow.tip.position - arrow.grabPoint.position).normalized;
+        transform.rotation = Quaternion.FromToRotation(axis, dir) * transform.rotation;
+        transform.position += origin - arrow.grabPoint.position;
+        Physics.SyncTransforms();
+
+        rb.isKinematic = false;
+        rb.useGravity = fromBow == null || !fromBow.noGravity;
+        rb.angularVelocity = Vector3.zero;
+        rb.linearVelocity = dir * speed;
+        StartFlight(true);
+    }
+
+    /// <summary>Remet la flèche à zéro (reprise dans le carquois).</summary>
+    public void PrepareForReuse()
+    {
+        Unpin();
+        if (flying) EndFlight(null);
+        flying = false;
+        stuck = false;
+        bonus = false;
+        grabbedWhileStuck = false;
+        StopAllCoroutines();
+        transform.SetParent(null, true);
+    }
+
+    void StartFlight() => StartFlight(false);
+
+    void StartFlight(bool isBonus)
+    {
+        Unpin();
+        bonus = isBonus;
         flying = true;
         stuck = false;
         wasMoving = false;
@@ -240,8 +337,11 @@ public class ArrowHit : MonoBehaviour
         previousTip = arrow.tip.position;
         transform.SetParent(null, true);
 
-        counted = ScoreManager.Instance == null || ScoreManager.Instance.RegisterShot();
+        var sm = ScoreManager.Instance;
+        counted = sm == null || (bonus ? sm.RegisterBonusShot() : sm.RegisterShot());
         if (!counted) Debug.Log("[ArrowHit] Manche terminée : ce tir ne compte pas.");
+
+        FlightStarted?.Invoke(this, arrow.bow);
     }
 
     void StickInto(RaycastHit hit, Vector3 dir)
@@ -257,6 +357,7 @@ public class ArrowHit : MonoBehaviour
         if (target != null) transform.SetParent(target.transform, true);   // suit la cible si elle bouge
 
         stuck = true;
+        Pin(target != null ? target.transform : hit.collider.transform);
         if (target == null) Debug.Log($"[ArrowHit] Flèche plantée dans '{hit.collider.name}' (pas une cible).", hit.collider);
         Debug.DrawLine(hit.point - dir * 0.3f, hit.point, target != null ? Color.green : Color.red, 10f);
         EndFlight(target, hit.point);
@@ -265,12 +366,13 @@ public class ArrowHit : MonoBehaviour
     void EndFlight(Target target, Vector3 point = default)
     {
         flying = false;
+        if (!rb.isKinematic) rb.useGravity = true;   // flèche sans gravité (Fulminaleuse) ratée : elle retombe
 
         if (!counted) return;
         counted = false;
 
-        if (target != null) target.OnArrowHit(point);
-        else if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterMiss();
+        if (target != null) target.OnArrowHit(point, bonus);
+        else if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterMiss(bonus);
     }
 
     /// <summary>
@@ -290,6 +392,8 @@ public class ArrowHit : MonoBehaviour
             return;
         }
         if (collision.transform.IsChildOf(transform)) return;
+        if (collision.collider.GetComponentInParent<ArrowHit>() != null) return;   // une autre flèche
+        if (IsPlayer(collision.collider)) return;                                  // le joueur lui-même
         if (arrow.bow != null && collision.transform.IsChildOf(arrow.bow.transform)) return;
 
         Vector3 point = collision.contactCount > 0 ? collision.GetContact(0).point : arrow.tip.position;
@@ -302,14 +406,19 @@ public class ArrowHit : MonoBehaviour
         if (target != null) transform.SetParent(target.transform, true);
 
         stuck = true;
+        Pin(target != null ? target.transform : collision.collider.transform);
         if (target == null) Debug.Log($"[ArrowHit] Flèche arrêtée par '{collision.collider.name}' (pas une cible).", collision.collider);
         EndFlight(target, point);
     }
+
+    /// <summary>Collider du joueur (XR Origin : corps, mains) : la flèche le traverse.</summary>
+    static bool IsPlayer(Collider c) => c.GetComponentInParent<Unity.XR.CoreUtils.XROrigin>() != null;
 
     /// <summary>La cible où la flèche est plantée disparaît : la flèche se détache et tombe.</summary>
     public void Unstick()
     {
         if (grab != null && grab.isSelected) return;
+        Unpin();
         stuck = false;
         flying = false;
         transform.SetParent(null, true);
@@ -322,6 +431,7 @@ public class ArrowHit : MonoBehaviour
         // Le joueur reprend la flèche (plantée ou en vol) : elle n'est plus en vol.
         grabbedWhileStuck = stuck || rb.isKinematic;
         if (flying) EndFlight(null);   // rattrapée en plein vol : compte comme ratée
+        Unpin();
         flying = false;
         stuck = false;
         transform.SetParent(null, true);

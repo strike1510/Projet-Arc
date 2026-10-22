@@ -17,6 +17,20 @@ public class ArrowController : MonoBehaviour
     bool stuck;     // true quand la flèche est plantée
     float draw;
 
+    /// <summary>Vrai quand ArrowHit a planté la flèche (elle reste figée, même sur une cible qui bouge).</summary>
+    [HideInInspector] public bool pinned;
+
+    /// <summary>Tension actuelle de la corde (m), entre 0 et bow.maxDraw.</summary>
+    public float Draw => nocked ? draw : 0f;
+
+    /// <summary>Vitesse de départ si on lâchait la flèche maintenant.</summary>
+    public float LaunchSpeed => bow != null ? Mathf.Lerp(bow.minSpeed, bow.maxSpeed, Draw / bow.maxDraw) : 0f;
+
+    /// <summary>Vrai quand la flèche est encochée sur un arc.</summary>
+    public bool IsNocked => nocked;
+    /// <summary>Vrai quand une main tient la flèche.</summary>
+    public bool IsHeld => grab != null && grab.isSelected;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -69,9 +83,28 @@ public class ArrowController : MonoBehaviour
             bow = b;
             nocked = true;
             bow.nockedArrow = this;
+            IgnoreBow(b);
             grab.trackPosition = false;
             grab.trackRotation = false;
             return;
+        }
+    }
+
+    BowController ignoredBow;
+
+    /// <summary>
+    /// La flèche encochée traverse le corps de l'arc : sans ça, au lâcher, le moteur physique la repousse
+    /// hors des colliders de l'arc et elle part de travers (elle ne suit plus la trajectoire affichée).
+    /// </summary>
+    void IgnoreBow(BowController b)
+    {
+        if (ignoredBow == b) return;
+        ignoredBow = b;
+        var mine = GetComponentsInChildren<Collider>(true);
+        foreach (var c in b.GetComponentsInChildren<Collider>(true))
+        {
+            if (c.GetComponentInParent<ArrowController>(true) != null) continue;   // flèches posées sur l'arc
+            foreach (var m in mine) Physics.IgnoreCollision(m, c, true);
         }
     }
 
@@ -86,14 +119,28 @@ public class ArrowController : MonoBehaviour
 
         float t = draw / bow.maxDraw;
         float speed = Mathf.Lerp(bow.minSpeed, bow.maxSpeed, t);
-        StartCoroutine(Fire(bow.arrowNock.forward, speed));
+        Vector3 dir = bow.arrowNock.forward;
+        StartCoroutine(Fire(dir, speed));
+        bow.NotifyFired(this, dir, speed, grabPoint.position);   // ex. Bow_Monkey : tir triple
+    }
+
+    /// <summary>Remet la flèche à zéro avant de la redonner (carquois, tir triple).</summary>
+    public void ResetForReuse()
+    {
+        StopAllCoroutines();
+        if (nocked && bow != null && bow.nockedArrow == this) bow.nockedArrow = null;
+        nocked = false;
+        flying = false;
+        stuck = false;
+        if (grab != null) { grab.trackPosition = true; grab.trackRotation = true; }
     }
 
     IEnumerator Fire(Vector3 dir, float speed)
     {
         yield return new WaitForFixedUpdate();
         rb.isKinematic = false;
-        rb.useGravity = true;
+        rb.useGravity = bow == null || !bow.noGravity;   // Bow_Fulminaleuse : tout droit
+        rb.angularVelocity = Vector3.zero;
         rb.linearVelocity = dir * speed;
         flying = true;
     }
@@ -137,7 +184,7 @@ public class ArrowController : MonoBehaviour
     void LateUpdate()
     {
         // Flèche lâchée sans être tirée : elle redevient physique et tombe
-        if (!grab.isSelected && rb.isKinematic && !stuck)
+        if (!grab.isSelected && rb.isKinematic && !stuck && !pinned)
         {
             rb.isKinematic = false;
             rb.useGravity = true;

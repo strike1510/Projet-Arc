@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Fait apparaître des cibles au hasard dans le champ de vision du joueur.
-/// Chaque cible reste "lifetime" secondes puis disparaît. À mettre sur un objet vide "Spawner" dans le niveau.
+/// Fait surgir des cibles au hasard dans le champ de vision du joueur.
+/// Chaque cible reste "lifetime" secondes puis repart. À mettre sur un objet vide "Spawner" dans le niveau.
 ///
-/// La cible utilisée est un vrai prefab du projet (ex. "Cible", sans pieds) : on la glisse dans "Target Prefab".
-/// Elle doit avoir le composant Target (comme les autres cibles).
+/// Les cibles sont de VRAIS objets de la scène : elles sont rangées (désactivées) sous l'enfant
+/// "Cibles en réserve" du Spawner. "Projet Arc > Configurer le projet" les crée à partir de "Target Prefab".
+/// Le script ne fait que les déplacer, les montrer et les cacher : rien n'est créé pendant le jeu.
 /// </summary>
 public class TargetSpawner : MonoBehaviour
 {
@@ -62,14 +63,30 @@ public class TargetSpawner : MonoBehaviour
     [Tooltip("Chance (0 à 1) qu'une cible apparue bouge (1 = toutes). Elles volent, donc elles montent et descendent au hasard.")]
     [Range(0f, 1f)] public float moveChance = 1f;
 
+    /// <summary>Nom de l'enfant qui contient les cibles en réserve.</summary>
+    public const string PoolName = "Cibles en réserve";
+
     readonly List<GameObject> alive = new List<GameObject>();
+    readonly List<Target> pool = new List<Target>();
     Camera cam;
 
     void Start()
     {
         cam = FindGameViewCamera();
-        if (targetPrefab == null) { Debug.LogError("[TargetSpawner] Glisse un prefab de cible dans 'Target Prefab'.", this); return; }
+
+        var reserve = transform.Find(PoolName);
+        if (reserve != null)
+            foreach (Transform child in reserve)
+                if (child.TryGetComponent(out Target t)) { pool.Add(t); child.gameObject.SetActive(false); }
+
+        if (pool.Count == 0) { Debug.LogError($"[TargetSpawner] Aucune cible sous '{PoolName}' : lance Projet Arc > Configurer le projet.", this); return; }
         StartCoroutine(SpawnLoop());
+    }
+
+    Target TakeFromPool()
+    {
+        foreach (var t in pool) if (t != null && !t.gameObject.activeSelf) return t;
+        return null;
     }
 
     IEnumerator SpawnLoop()
@@ -80,7 +97,7 @@ public class TargetSpawner : MonoBehaviour
             var sm = ScoreManager.Instance;
             bool roundRunning = sm == null || !sm.IsRoundOver;
 
-            alive.RemoveAll(t => t == null);
+            alive.RemoveAll(t => t == null || !t.activeSelf);
             if (roundRunning && alive.Count < maxAlive) TrySpawn();
 
             yield return new WaitForSeconds(Random.Range(spawnInterval.x, spawnInterval.y));
@@ -121,36 +138,48 @@ public class TargetSpawner : MonoBehaviour
 
     void Spawn(Vector3 pos, Vector3 dirFromPlayer)
     {
+        var t = TakeFromPool();
+        if (t == null) return;   // toutes les cibles de la réserve sont déjà sorties
+
         Quaternion rot = Quaternion.LookRotation(dirFromPlayer) * Quaternion.Euler(0f, faceYawOffset, 0f);
-        var t = Instantiate(targetPrefab, pos, rot);
-        t.name = "Cible apparue";
+        t.transform.SetPositionAndRotation(pos, rot);
+        var mt = t.GetComponent<MovingTarget>();
 
         if (appearMode == Appear.SortDuSol)
         {
             t.transform.localScale = Vector3.one * targetScale;
-            if (pointsMultiplier != 1)
-                for (int i = 0; i < t.ringPoints.Length; i++) t.ringPoints[i] *= pointsMultiplier;
+            if (mt != null) mt.enabled = false;   // c'est la sortie du sol qui la déplace
+            t.gameObject.SetActive(true);
             alive.Add(t.gameObject);
             StartCoroutine(GroundLife(t.transform, pos));
             return;
         }
         t.transform.localScale = Vector3.one * targetScale * 0.02f;
 
-        if (pointsMultiplier != 1)
-            for (int i = 0; i < t.ringPoints.Length; i++) t.ringPoints[i] *= pointsMultiplier;
-
-        if (Random.value < moveChance)
+        bool moves = mt != null && Random.value < moveChance;
+        if (mt != null)
         {
             // Elles volent : mouvement Auto → haut/bas, au hasard
-            var mt = t.gameObject.AddComponent<MovingTarget>();
+            mt.enabled = moves;
             mt.motion = MovingTarget.Motion.Auto;
             mt.aleatoire = true;
             mt.amplitude = Random.Range(0.8f, 1.5f);
             mt.speed = Random.Range(0.3f, 0.6f);
         }
 
+        t.gameObject.SetActive(true);
+        if (moves) mt.Restart();
         alive.Add(t.gameObject);
         StartCoroutine(Life(t.transform));
+    }
+
+    /// <summary>La cible repart dans la réserve (cachée, prête à resservir).</summary>
+    void Store(Transform t)
+    {
+        if (t == null) return;
+        alive.Remove(t.gameObject);
+        t.gameObject.SetActive(false);
+        t.localScale = Vector3.one * targetScale;
     }
 
     IEnumerator Life(Transform t)
@@ -184,10 +213,7 @@ public class TargetSpawner : MonoBehaviour
             t.localScale = full * Mathf.Max(0.02f, 1f - Mathf.SmoothStep(0f, 1f, k));
             yield return null;
         }
-        if (t == null) yield break;
-
-        alive.Remove(t.gameObject);
-        Destroy(t.gameObject);
+        Store(t);
     }
 
     /// <summary>Cible qui sort du sol en glissant, reste, puis rentre dans le sol.</summary>
@@ -217,10 +243,7 @@ public class TargetSpawner : MonoBehaviour
 
         foreach (var arrow in t.GetComponentsInChildren<ArrowHit>(true)) arrow.Unstick();
         yield return Slide(t, up, down);
-        if (t == null) yield break;
-
-        alive.Remove(t.gameObject);
-        Destroy(t.gameObject);
+        Store(t);
     }
 
     IEnumerator Slide(Transform t, Vector3 from, Vector3 to)
