@@ -153,6 +153,21 @@ public class ScoreManager : MonoBehaviour
         CheckEndOfRound();
     }
 
+    /// <summary>
+    /// Points bonus (flèches bonus du tir triple de l'arc Bio) : ajoutés au score
+    /// sans compter comme une flèche tirée.
+    /// </summary>
+    public void RegisterBonus(int points)
+    {
+        if (IsRoundOver || points <= 0) return;
+        roundScores[^1] += points;
+        TotalScore += points;
+
+        Debug.Log($"[Score] {PlayerName} : +{points} bonus → {RoundScore}/{targetScore} pts");
+        OnScoreChanged?.Invoke();
+        CheckEndOfRound();
+    }
+
     public void RegisterMiss()
     {
         if (IsRoundOver) return;

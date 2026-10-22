@@ -2808,6 +2808,64 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3770061231272980169, guid: 62d4420a059fb3f43ae287dad19f4efb, type: 3}
   m_PrefabInstance: {fileID: 408050955}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &452206681
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 452206683}
+  - component: {fileID: 452206682}
+  m_Layer: 0
+  m_Name: Armoire
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &452206682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 452206681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f882e1eaf3454209bce5894a9cfa5cb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BowRack
+  slots:
+  - {data: {fileID: 11400000, guid: 85b8622e98fd460cbfebcbad8e5135a0, type: 2}, point: {fileID: 0}}
+  - {data: {fileID: 11400000, guid: bbc8d9ed62fa4c798bf063d6c9cbf3c5, type: 2}, point: {fileID: 0}}
+  - {data: {fileID: 11400000, guid: 1f3de6155724437bbc2718b1932a745c, type: 2}, point: {fileID: 0}}
+  - {data: {fileID: 11400000, guid: 0d8f44528f0d490497819070573183c1, type: 2}, point: {fileID: 0}}
+  spacing: 0.75
+  bowHeight: 1.3
+  panelOffset: {x: 0, y: -0.25, z: 0.35}
+  panelScale: 0.0006
+  panelsFaceCamera: 1
+  buildCabinet: 1
+  cabinetPadding: 0.12
+  bobAmplitude: 0.03
+  bobSpeed: 0.7
+--- !u!4 &452206683
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 452206681}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: -0, w: -0}
+  m_LocalPosition: {x: 0, y: 0, z: -9.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &471734870
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8865,6 +8923,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bow_Bio
       objectReference: {fileID: 0}
+    - target: {fileID: 8384691805008285517, guid: 4a90a6212934ab2428612d02a20f5432, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9157991129836525047, guid: 4a90a6212934ab2428612d02a20f5432, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.519
@@ -9466,6 +9528,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bow_Monkey
       objectReference: {fileID: 0}
+    - target: {fileID: 8200165291830769708, guid: 3fb60bd68259e4c4fb6938db3173124e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8829032528401605270, guid: 3fb60bd68259e4c4fb6938db3173124e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.095
@@ -10006,6 +10072,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bow_Fulminaleuse
       objectReference: {fileID: 0}
+    - target: {fileID: 6528462058049417828, guid: bd39d6821e2958046919808cac92fa4d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7982633177623758656, guid: bd39d6821e2958046919808cac92fa4d, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0.23031813
@@ -10401,9 +10471,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1717954561962503726, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1612687621}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+--- !u!4 &1505654043 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1717954561962503726, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+  m_PrefabInstance: {fileID: 1505654042}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1538277368
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11006,6 +11084,101 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.03061037, y: 0.004108309, z: 0.02352725}
   m_Center: {x: -0.0066222665, y: -0.0000010173533, z: -1.1641532e-10}
+--- !u!1 &1612687620
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1612687621}
+  - component: {fileID: 1612687622}
+  m_Layer: 0
+  m_Name: "S\xE9lecteur d'arcs"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1612687621
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1612687620}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1505654043}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1612687622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1612687620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db99c8a76a6f42d781f2c5bb78e7a199, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BowSummoner
+  bows:
+  - {fileID: 11400000, guid: 85b8622e98fd460cbfebcbad8e5135a0, type: 2}
+  - {fileID: 11400000, guid: bbc8d9ed62fa4c798bf063d6c9cbf3c5, type: 2}
+  - {fileID: 11400000, guid: 1f3de6155724437bbc2718b1932a745c, type: 2}
+  - {fileID: 11400000, guid: 0d8f44528f0d490497819070573183c1, type: 2}
+  toggleInput:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Toggle Input
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 46956d78-aa22-4d21-8f87-4ccd23a925f5
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+      m_Priority: 0
+    m_Reference: {fileID: 0}
+  rotateInput:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Rotate Input
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 10ee3bb5-c96a-4bde-b90b-35926e9df538
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+      m_Priority: 0
+    m_Reference: {fileID: 0}
+  rotateKeysInput:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Rotate Keys Input
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 377989cd-3ab2-4dcf-9c6b-428756a6c373
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+      m_Priority: 0
+    m_Reference: {fileID: 0}
+  rotateSpeed: 120
+  disableTurnWhileOpen: 1
+  radius: 0.8
+  heightBelowHead: 0.25
+  appearStagger: 0.06
+  panelOffset: {x: 0, y: -0.42, z: 0.22}
+  panelScale: 0.0005
 --- !u!1 &1621146171
 GameObject:
   m_ObjectHideFlags: 0
@@ -14622,6 +14795,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bow_Base
       objectReference: {fileID: 0}
+    - target: {fileID: 4333936818788199858, guid: c35285078a724af42a4df6e4ba88b572, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7548110100532738010, guid: c35285078a724af42a4df6e4ba88b572, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -14658,3 +14835,4 @@ SceneRoots:
   - {fileID: 1015977351}
   - {fileID: 303207486}
   - {fileID: 983148877}
+  - {fileID: 452206683}

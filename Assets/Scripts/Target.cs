@@ -93,6 +93,19 @@ public class Target : MonoBehaviour
         if (showPopup) StartCoroutine(Popup(worldPoint, points, bullseye));
     }
 
+    /// <summary>
+    /// Appelé par une flèche bonus (tir triple de l'arc Bio) : points multipliés par 'factor',
+    /// sans compter comme une flèche tirée.
+    /// </summary>
+    public void OnBonusArrowHit(Vector3 worldPoint, float factor)
+    {
+        int points = Mathf.RoundToInt(GetPoints(worldPoint, out int ring) * factor);
+        if (points <= 0) return;
+
+        if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterBonus(points);
+        if (showPopup) StartCoroutine(Popup(worldPoint, points, IsBullseye(ring)));
+    }
+
     IEnumerator Popup(Vector3 hitPoint, int points, bool bullseye)
     {
         var cam = Camera.main;
