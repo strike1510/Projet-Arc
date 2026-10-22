@@ -150,6 +150,7 @@ public class BirdTarget : MonoBehaviour
         if (rb != null) rb.isKinematic = true;
 
         // Animation de vol
+        if (animator != null && HasBool(animator, "landing")) animator.SetBool("landing", false);
         if (animator != null && HasBool(animator, flyingAnimatorBool)) animator.SetBool(flyingAnimatorBool, true);
 
         // Direction : dans le sens de la flèche (il fuit), vers le haut

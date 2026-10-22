@@ -73,6 +73,37 @@ public class ArrowHit : MonoBehaviour
         wasNocked = nocked;
     }
 
+    // ---------- Flèche plantée : elle suit ce qu'elle a touché (cible qui bouge) sans changer d'orientation ----------
+
+    Transform pinTo;                 // objet dans lequel la flèche est plantée
+    Vector3 pinLocalPos;             // position de la flèche dans le repère de cet objet
+    Quaternion pinLocalRot;          // orientation de la flèche dans le repère de cet objet
+    bool pinned;
+    RigidbodyInterpolation savedInterpolation;
+
+    /// <summary>Fige la flèche sur 'to' : à chaque image elle est replacée exactement au même endroit de l'objet.</summary>
+    void Pin(Transform to)
+    {
+        if (to == null) { Unpin(); return; }
+        if (!pinned) savedInterpolation = rb.interpolation;
+        // Pas d'interpolation sur une flèche figée : sinon le Rigidbody réécrit sa propre position
+        // et la flèche "glisse" ou tourne quand la cible bouge
+        rb.interpolation = RigidbodyInterpolation.None;
+        pinTo = to;
+        pinLocalPos = to.InverseTransformPoint(transform.position);
+        pinLocalRot = Quaternion.Inverse(to.rotation) * transform.rotation;
+        pinned = true;
+        arrow.pinned = true;
+    }
+
+    void Unpin()
+    {
+        if (pinned && rb != null) rb.interpolation = savedInterpolation;
+        pinned = false;
+        pinTo = null;
+        if (arrow != null) arrow.pinned = false;
+    }
+
     void LateUpdate()
     {
         // Une flèche plantée par notre raycast reste figée (ArrowController ne connaît que ses propres impacts)
@@ -81,6 +112,13 @@ public class ArrowHit : MonoBehaviour
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.isKinematic = true;
+        }
+
+        // Plantée dans une cible qui bouge : même position et même sens par rapport à la cible
+        if (pinned)
+        {
+            if (!stuck || grab.isSelected || pinTo == null) { Unpin(); return; }
+            transform.SetPositionAndRotation(pinTo.TransformPoint(pinLocalPos), pinTo.rotation * pinLocalRot);
         }
     }
 
@@ -204,6 +242,7 @@ public class ArrowHit : MonoBehaviour
         {
             transform.SetParent(target.transform, true);
             stuck = true;
+            Pin(target.transform);
             Debug.Log($"[ArrowHit] Flèche plantée par ArrowController dans la cible '{target.name}' : impact compté.", target);
         }
         else Debug.Log("[ArrowHit] Flèche arrêtée par un autre script, aucune cible autour : raté.");
@@ -274,6 +313,7 @@ public class ArrowHit : MonoBehaviour
     /// <summary>Remet la flèche à zéro (reprise dans le carquois).</summary>
     public void PrepareForReuse()
     {
+        Unpin();
         if (flying) EndFlight(null);
         flying = false;
         stuck = false;
@@ -287,6 +327,7 @@ public class ArrowHit : MonoBehaviour
 
     void StartFlight(bool isBonus)
     {
+        Unpin();
         bonus = isBonus;
         flying = true;
         stuck = false;
@@ -316,6 +357,7 @@ public class ArrowHit : MonoBehaviour
         if (target != null) transform.SetParent(target.transform, true);   // suit la cible si elle bouge
 
         stuck = true;
+        Pin(target != null ? target.transform : hit.collider.transform);
         if (target == null) Debug.Log($"[ArrowHit] Flèche plantée dans '{hit.collider.name}' (pas une cible).", hit.collider);
         Debug.DrawLine(hit.point - dir * 0.3f, hit.point, target != null ? Color.green : Color.red, 10f);
         EndFlight(target, hit.point);
@@ -363,6 +405,7 @@ public class ArrowHit : MonoBehaviour
         if (target != null) transform.SetParent(target.transform, true);
 
         stuck = true;
+        Pin(target != null ? target.transform : collision.collider.transform);
         if (target == null) Debug.Log($"[ArrowHit] Flèche arrêtée par '{collision.collider.name}' (pas une cible).", collision.collider);
         EndFlight(target, point);
     }
@@ -374,6 +417,7 @@ public class ArrowHit : MonoBehaviour
     public void Unstick()
     {
         if (grab != null && grab.isSelected) return;
+        Unpin();
         stuck = false;
         flying = false;
         transform.SetParent(null, true);
@@ -386,6 +430,7 @@ public class ArrowHit : MonoBehaviour
         // Le joueur reprend la flèche (plantée ou en vol) : elle n'est plus en vol.
         grabbedWhileStuck = stuck || rb.isKinematic;
         if (flying) EndFlight(null);   // rattrapée en plein vol : compte comme ratée
+        Unpin();
         flying = false;
         stuck = false;
         transform.SetParent(null, true);

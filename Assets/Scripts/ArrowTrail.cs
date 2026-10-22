@@ -12,6 +12,9 @@ public class ArrowTrail : MonoBehaviour
     [Tooltip("Le TrailRenderer de la flèche (enfant \"Traînée\").")]
     public TrailRenderer trail;
 
+    [Tooltip("Particle System d'étincelles de la flèche (allumé seulement si l'arc a \"Trail Sparks\").")]
+    public ParticleSystem sparks;
+
     [Header("Style par défaut (tir sans arc)")]
     public Gradient defaultColors;
     public float defaultWidth = 0.03f;
@@ -20,13 +23,16 @@ public class ArrowTrail : MonoBehaviour
     ArrowHit hit;
     bool flicker;
     float baseWidth;
+    Material defaultMaterial;
 
     void Awake()
     {
         hit = GetComponent<ArrowHit>();
         hit.FlightStarted += OnFlightStarted;
+        SetSparks(false);
         if (trail != null)
         {
+            defaultMaterial = trail.sharedMaterial;
             trail.emitting = false;
             trail.Clear();
         }
@@ -37,8 +43,17 @@ public class ArrowTrail : MonoBehaviour
         if (hit != null) hit.FlightStarted -= OnFlightStarted;
     }
 
+    void SetSparks(bool on)
+    {
+        if (sparks == null) return;
+        var em = sparks.emission;
+        em.enabled = on;
+        if (on && !sparks.isPlaying) sparks.Play();
+    }
+
     void OnDisable()
     {
+        SetSparks(false);
         if (trail == null) return;
         trail.emitting = false;
         trail.Clear();
@@ -54,6 +69,8 @@ public class ArrowTrail : MonoBehaviour
         trail.time = fromBow ? bow.trailTime : defaultTime;
         flicker = fromBow && bow.trailFlicker;
         trail.widthMultiplier = baseWidth;
+        trail.sharedMaterial = fromBow && bow.trailMaterial != null ? bow.trailMaterial : defaultMaterial;
+        SetSparks(fromBow && bow.trailSparks);
 
         trail.Clear();
         trail.emitting = true;
@@ -66,6 +83,7 @@ public class ArrowTrail : MonoBehaviour
         // Impact (ou flèche rattrapée) : la traînée s'arrête et s'efface toute seule
         if (!hit.IsFlying)
         {
+            SetSparks(false);
             trail.emitting = false;
             trail.widthMultiplier = baseWidth;
             return;

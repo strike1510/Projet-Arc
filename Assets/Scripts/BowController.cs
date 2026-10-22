@@ -21,6 +21,10 @@ public class BowController : MonoBehaviour
     public float trailTime = 0.4f;
     [Tooltip("La traînée scintille (effet électrique).")]
     public bool trailFlicker = false;
+    [Tooltip("Matériau spécial de la traînée (ex. éclair pour Bow_Fulminaleuse). Vide = traînée unie.")]
+    public Material trailMaterial;
+    [Tooltip("La flèche lâche des étincelles électriques en vol (Particle System \"Étincelles\" de la flèche).")]
+    public bool trailSparks = false;
 
     [HideInInspector] public ArrowController nockedArrow; // flèche encochée, null si aucune
 

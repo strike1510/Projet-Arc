@@ -17,6 +17,15 @@ public class ArrowController : MonoBehaviour
     bool stuck;     // true quand la flèche est plantée
     float draw;
 
+    /// <summary>Vrai quand ArrowHit a planté la flèche (elle reste figée, même sur une cible qui bouge).</summary>
+    [HideInInspector] public bool pinned;
+
+    /// <summary>Tension actuelle de la corde (m), entre 0 et bow.maxDraw.</summary>
+    public float Draw => nocked ? draw : 0f;
+
+    /// <summary>Vitesse de départ si on lâchait la flèche maintenant.</summary>
+    public float LaunchSpeed => bow != null ? Mathf.Lerp(bow.minSpeed, bow.maxSpeed, Draw / bow.maxDraw) : 0f;
+
     /// <summary>Vrai quand la flèche est encochée sur un arc.</summary>
     public bool IsNocked => nocked;
     /// <summary>Vrai quand une main tient la flèche.</summary>
@@ -155,7 +164,7 @@ public class ArrowController : MonoBehaviour
     void LateUpdate()
     {
         // Flèche lâchée sans être tirée : elle redevient physique et tombe
-        if (!grab.isSelected && rb.isKinematic && !stuck)
+        if (!grab.isSelected && rb.isKinematic && !stuck && !pinned)
         {
             rb.isKinematic = false;
             rb.useGravity = true;

@@ -18,7 +18,7 @@ using UnityEngine.XR.Interaction.Toolkit.UI;
 /// et ajoute : couleurs des arcs / flèches, traînées, tir triple du Bow_Monkey, carquois dans le dos, chrono de 5 min.
 /// Peut être relancé sans risque : il refait ce qu'il a créé.
 /// </summary>
-public static class ProjetArcSetup
+public static partial class ProjetArcSetup
 {
     const string MatFolder = "Assets/Materials/Archery";
     const string SideLeft = "Flèche gauche (tir triple)";
@@ -28,6 +28,7 @@ public static class ProjetArcSetup
     const string WristName = "Montre chrono";
     const string BoardChronoName = "Chrono";
     const string TimerName = "Chrono du niveau";
+    const string AimName = "Aide à la visée";
     const int ArrowsPerTypeInQuiver = 3;
 
     static readonly string[] Scenes =
@@ -44,6 +45,8 @@ public static class ProjetArcSetup
         public Color[] trail;
         public float trailWidth, trailTime;
         public bool flicker;
+        public bool electric;                   // effets électriques (particules, traînée éclair)
+        public Color accentEmission = Color.black;
     }
 
     static readonly Dictionary<string, Style> Styles = new Dictionary<string, Style>
@@ -64,10 +67,13 @@ public static class ProjetArcSetup
         },
         [ArcheryTypes.Fulminaleuse] = new Style
         {
-            bow = new Color(0.12f, 0.25f, 0.85f), bowAccent = new Color(0.6f, 0.9f, 1f),
-            arrow = new Color(0.25f, 0.55f, 1f), arrowAccent = new Color(0.8f, 0.95f, 1f),
-            str = new Color(0.5f, 1f, 1f), emission = new Color(0.1f, 0.45f, 1f) * 1.2f,
-            trail = new[] { new Color(0.6f, 1f, 1f), new Color(0.6f, 0.2f, 1f) }, trailWidth = 0.08f, trailTime = 0.35f, flicker = true,
+            // Violet orage + éclairs jaunes
+            bow = new Color(0.3f, 0.07f, 0.55f), bowAccent = new Color(1f, 0.85f, 0.15f),
+            arrow = new Color(0.42f, 0.12f, 0.72f), arrowAccent = new Color(1f, 0.9f, 0.3f),
+            str = new Color(1f, 0.95f, 0.55f), emission = new Color(0.35f, 0.08f, 0.7f) * 0.8f,
+            accentEmission = new Color(1f, 0.8f, 0.1f) * 2.5f,
+            trail = new[] { new Color(1f, 1f, 0.75f), new Color(1f, 0.85f, 0.1f), new Color(0.6f, 0.2f, 1f) }, trailWidth = 0.09f, trailTime = 0.4f,
+            flicker = true, electric = true,
         },
         [ArcheryTypes.Monkey] = new Style
         {
@@ -131,10 +137,12 @@ public static class ProjetArcSetup
         FixNegativeScaleBoxColliders(scene);
         SetupEventSystem(scene);
         SetupBows(scene);
+        SetupAimGuides(scene);
         SetupQuiver(scene);
         SetupArrows(scene);     // après le carquois et le tir triple : couvre aussi les flèches copiées
         SetupTargets(scene);
         SetupTargetSpawners(scene);
+        KeepSingleBird(scene);
         SetupBirdSpawners(scene);
         SetupResultsBoards(scene);
         SetupTimer(scene);
@@ -341,12 +349,14 @@ public static class ProjetArcSetup
             string type = ArcheryTypes.Of(bow.name);
             var st = Styles[type];
             var main = LitMaterial($"Arc_{type}", st.bow, st.emission);
-            var accent = LitMaterial($"Arc_{type}_Detail", st.bowAccent, st.emission * 0.6f);
+            var accent = LitMaterial($"Arc_{type}_Detail", st.bowAccent, st.accentEmission.maxColorComponent > 0f ? st.accentEmission : st.emission * 0.6f);
 
             foreach (var r in bow.GetComponentsInChildren<Renderer>(true))
             {
-                if (r is TrailRenderer) continue;
+                if (r is TrailRenderer || r is ParticleSystemRenderer) continue;
                 if (r.GetComponentInParent<ArrowController>(true) != null) continue;   // flèches posées sur l'arc
+                if (IsUnder(r.transform, ElecName)) continue;                        // effets électriques
+                if (IsUnder(r.transform, AimName)) continue;                         // aide à la visée
                 if (r is LineRenderer lr)
                 {
                     lr.sharedMaterial = UnlitVertexMaterial("Corde");
@@ -361,9 +371,85 @@ public static class ProjetArcSetup
             bow.trailWidth = st.trailWidth;
             bow.trailTime = st.trailTime;
             bow.trailFlicker = st.flicker;
+            bow.trailSparks = st.electric;
+            bow.trailMaterial = st.electric ? ElectricTrailMaterial() : null;
+            SetupBowElectricity(bow, st.electric);
             EditorUtility.SetDirty(bow);
 
             if (type == ArcheryTypes.Monkey) SetupTripleShot(bow, exemplars);
+        }
+    }
+
+    static bool IsUnder(Transform t, string name)
+    {
+        for (var p = t; p != null; p = p.parent) if (p.name == name) return true;
+        return false;
+    }
+
+    // ---------- Aide à la visée ----------
+
+    static LineRenderer AimLine(Transform parent, string name, Gradient colors, float width)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        var lr = go.AddComponent<LineRenderer>();
+        lr.sharedMaterial = UnlitVertexMaterial("Trainee");
+        lr.useWorldSpace = true;
+        lr.positionCount = 0;
+        lr.widthMultiplier = width;
+        lr.widthCurve = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.6f));
+        lr.colorGradient = colors;
+        lr.numCapVertices = 2;
+        lr.numCornerVertices = 2;
+        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        lr.receiveShadows = false;
+        lr.enabled = false;
+        return lr;
+    }
+
+    static void SetupAimGuides(Scene scene)
+    {
+        foreach (var bow in All<BowController>(scene))
+        {
+            DestroyChild(bow.transform, AimName);
+            var st = Styles[ArcheryTypes.Of(bow.name)];
+
+            var root = new GameObject(AimName).transform;
+            root.SetParent(bow.transform, false);
+
+            // Couleur de l'arc, de plus en plus transparente vers la fin de la trajectoire
+            Color c = st.trail[0];
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(c, 0f), new GradientColorKey(st.trail[st.trail.Length - 1], 1f) },
+                      new[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0.6f, 0.7f), new GradientAlphaKey(0.15f, 1f) });
+            var gSide = new Gradient();
+            gSide.SetKeys(g.colorKeys, new[] { new GradientAlphaKey(0.5f, 0f), new GradientAlphaKey(0.3f, 0.7f), new GradientAlphaKey(0.05f, 1f) });
+
+            var guide = GetOrAdd<AimGuide>(bow.gameObject);
+            guide.line = AimLine(root, "Trajectoire", g, 0.015f);
+            guide.leftLine = guide.rightLine = null;
+            if (bow.GetComponent<TripleShot>() != null)
+            {
+                guide.leftLine = AimLine(root, "Trajectoire gauche", gSide, 0.01f);
+                guide.rightLine = AimLine(root, "Trajectoire droite", gSide, 0.01f);
+            }
+
+            // Point d'impact : petit disque plat à la couleur de l'arc, sans collider
+            var marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            marker.name = "Point d'impact";
+            Object.DestroyImmediate(marker.GetComponent<Collider>());
+            marker.transform.SetParent(root, false);
+            marker.transform.localScale = new Vector3(0.12f, 0.004f, 0.12f);
+            var pivot = new GameObject("Repère").transform;   // son axe Z regarde la surface touchée, le disque est couché dessus
+            pivot.SetParent(root, false);
+            marker.transform.SetParent(pivot, false);
+            marker.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            marker.GetComponent<Renderer>().sharedMaterial = LitMaterial($"Impact_{ArcheryTypes.Of(bow.name)}", c, c * 1.5f, 0.2f);
+            marker.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            pivot.gameObject.SetActive(false);
+            guide.impactMarker = pivot;
+
+            EditorUtility.SetDirty(guide);
         }
     }
 
@@ -435,7 +521,7 @@ public static class ProjetArcSetup
             var accent = LitMaterial($"Fleche_{type}_Detail", st.arrowAccent, st.emission * 0.5f, 0.6f);
 
             foreach (var r in arrow.GetComponentsInChildren<Renderer>(true))
-                if (!(r is TrailRenderer) && !(r is LineRenderer)) Paint(r, main, accent);
+                if (!(r is TrailRenderer) && !(r is LineRenderer) && !(r is ParticleSystemRenderer)) Paint(r, main, accent);
 
             // Toutes les flèches comptent les points (avant, seule Arrow_Base avait ArrowHit)
             GetOrAdd<ArrowHit>(arrow.gameObject);
@@ -468,6 +554,9 @@ public static class ProjetArcSetup
             at.defaultColors = MakeGradient(st.trail);
             at.defaultWidth = st.trailWidth;
             at.defaultTime = st.trailTime;
+            at.sparks = SetupArrowSparks(t);
+            trail.textureMode = LineTextureMode.Tile;
+            trail.textureScale = new Vector2(2f, 1f);   // l'éclair se répète tous les 50 cm
             EditorUtility.SetDirty(at);
             EditorUtility.SetDirty(arrow.gameObject);
         }
@@ -632,7 +721,9 @@ public static class ProjetArcSetup
             var pool = new GameObject(FlyingBirdSpawner.PoolName).transform;
             pool.SetParent(sp.transform, false);
 
-            for (int i = 0; i < Mathf.Max(1, sp.maxAlive + 1); i++)
+            sp.maxAlive = 1;   // un seul oiseau
+            EditorUtility.SetDirty(sp);
+            for (int i = 0; i < 1; i++)
             {
                 var src = sp.birdPrefab;
                 var bird = PrefabUtility.IsPartOfPrefabAsset(src)
@@ -647,6 +738,8 @@ public static class ProjetArcSetup
                 foreach (var mb in bird.GetComponentsInChildren<MonoBehaviour>(true))
                     if (mb.GetType().Name.StartsWith("lb_")) { mb.enabled = false; EditorUtility.SetDirty(mb); }
                 foreach (var rb in bird.GetComponentsInChildren<Rigidbody>(true)) { rb.isKinematic = true; rb.useGravity = false; }
+
+                SetupBirdAnimator(bird);
 
                 var bt = GetOrAdd<BirdTarget>(bird);
                 bt.points = sp.points;
