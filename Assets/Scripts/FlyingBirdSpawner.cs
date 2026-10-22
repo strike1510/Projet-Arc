@@ -7,6 +7,9 @@ using UnityEngine;
 /// On peut leur tirer dessus à tout moment : ils ont BirdTarget (points + texte + ils s'enfuient).
 /// À mettre sur un objet vide "OiseauxEnVol" dans le niveau, avec un oiseau du pack "living birds" (ex. lb_crow)
 /// dans "Bird Prefab" (n'importe quel modèle d'oiseau marche).
+///
+/// Les oiseaux sont de VRAIS objets de la scène, rangés (désactivés) sous l'enfant "Oiseaux en réserve".
+/// "Projet Arc > Configurer le projet" les crée à partir de "Bird Prefab". Rien n'est créé pendant le jeu.
 /// </summary>
 public class FlyingBirdSpawner : MonoBehaviour
 {
@@ -65,15 +68,21 @@ public class FlyingBirdSpawner : MonoBehaviour
     [Tooltip("Booléen joué de temps en temps au sol (\"peck\" = picorer dans living birds). Vide = rien.")]
     public string groundAnimatorBool = "peck";
 
+    /// <summary>Nom de l'enfant qui contient les oiseaux en réserve.</summary>
+    public const string PoolName = "Oiseaux en réserve";
+
     readonly List<GameObject> alive = new List<GameObject>();
+    readonly List<BirdTarget> pool = new List<BirdTarget>();
     Camera cam;
-    Transform holder;   // parent caché : les scripts du pack ne démarrent pas pendant qu'on prépare l'oiseau
 
     void Start()
     {
-        if (birdPrefab == null) { Debug.LogError("[FlyingBirdSpawner] Glisse un oiseau dans 'Bird Prefab'.", this); return; }
-        holder = new GameObject("(préparation oiseaux)").transform;
-        holder.gameObject.SetActive(false);
+        var reserve = transform.Find(PoolName);
+        if (reserve != null)
+            foreach (Transform child in reserve)
+                if (child.TryGetComponent(out BirdTarget b)) { pool.Add(b); child.gameObject.SetActive(false); }
+
+        if (pool.Count == 0) { Debug.LogError($"[FlyingBirdSpawner] Aucun oiseau sous '{PoolName}' : lance Projet Arc > Configurer le projet.", this); return; }
         StartCoroutine(Loop());
     }
 
@@ -82,9 +91,8 @@ public class FlyingBirdSpawner : MonoBehaviour
         yield return new WaitForSeconds(firstDelay);
         while (true)
         {
-            // Oiseaux touchés : BirdTarget les cache à la fin de leur fuite → on les supprime
-            foreach (var b in alive) if (b != null && !b.activeInHierarchy) Destroy(b);
-            alive.RemoveAll(b => b == null || !b.activeInHierarchy);
+            // Oiseaux touchés : BirdTarget les cache à la fin de leur fuite → ils sont de nouveau libres
+            alive.RemoveAll(b => b == null || !b.activeSelf);
 
             var sm = ScoreManager.Instance;
             if ((sm == null || !sm.IsRoundOver) && alive.Count < maxAlive) SpawnOne();
@@ -104,7 +112,7 @@ public class FlyingBirdSpawner : MonoBehaviour
         // 1) À côté d'une cible visible
         if (landNearTargets)
         {
-            var targets = new List<Target>(FindObjectsByType<Target>(FindObjectsSortMode.None));
+            var targets = new List<Target>(FindObjectsByType<Target>());
             for (int i = 0; i < targets.Count; i++) { int j = Random.Range(i, targets.Count); (targets[i], targets[j]) = (targets[j], targets[i]); }
 
             foreach (var t in targets)
@@ -163,19 +171,13 @@ public class FlyingBirdSpawner : MonoBehaviour
         Vector3 from = land + (side * 0.8f - toPlayer * 0.6f).normalized * approachDistance + Vector3.up * approachHeight;
         Vector3 leave = land + (-side * 0.8f - toPlayer * 0.6f).normalized * approachDistance + Vector3.up * approachHeight * 1.5f;
 
-        // Préparé sous un parent inactif : Awake/Start des scripts du pack ne s'exécutent pas
-        var bird = Instantiate(birdPrefab, holder);
-        bird.name = "Oiseau";
-        foreach (var mb in bird.GetComponentsInChildren<MonoBehaviour>(true))
-            if (mb.GetType().Name.StartsWith("lb_")) mb.enabled = false;
-        foreach (var rb in bird.GetComponentsInChildren<Rigidbody>(true)) { rb.isKinematic = true; rb.useGravity = false; }
+        // Un oiseau libre de la réserve (déjà réglé dans l'éditeur : scripts du pack coupés, Rigidbody cinématique)
+        BirdTarget bt = null;
+        foreach (var b in pool) if (b != null && !b.gameObject.activeSelf) { bt = b; break; }
+        if (bt == null) return;
+        var bird = bt.gameObject;
 
-        bird.transform.SetParent(null, false);
         bird.transform.position = from;
-        bird.transform.localScale = birdPrefab.transform.localScale * birdScale;
-
-        var bt = bird.GetComponent<BirdTarget>();
-        if (bt == null) bt = bird.AddComponent<BirdTarget>();
         bt.points = points;
         bt.hitRadius = hitRadius;
         bt.reaction = BirdTarget.Reaction.SEnvole;
@@ -218,7 +220,7 @@ public class FlyingBirdSpawner : MonoBehaviour
         yield return FlyCurve(bird, bt, land, control2, leave, v, slowDownAtEnd: false);
         if (Gone(bird, bt)) yield break;
 
-        Destroy(bird);
+        bird.SetActive(false);   // retourne dans la réserve
     }
 
     /// <summary>Vol le long d'une courbe (Bézier) de a à c en passant près de b. S'arrête si l'oiseau est touché.</summary>
@@ -264,8 +266,4 @@ public class FlyingBirdSpawner : MonoBehaviour
             if (p.type == AnimatorControllerParameterType.Bool && p.name == name) { anim.SetBool(name, value); return; }
     }
 
-    void OnDestroy()
-    {
-        if (holder != null) Destroy(holder.gameObject);
-    }
 }

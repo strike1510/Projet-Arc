@@ -41,13 +41,14 @@ public class Target : MonoBehaviour
             return;
         }
 
-        // Les disques ont des CapsuleCollider qui, aplatis, deviennent des SPHÈRES de 50 cm
-        // devant la cible : on les remplace par des MeshCollider qui épousent vraiment les disques.
+        // Les disques doivent avoir des MeshCollider (posés dans l'éditeur par "Projet Arc > Configurer le projet").
+        // Filet de sécurité seulement si la cible n'a pas été configurée.
         foreach (var ring in rings)
         {
+            if (ring.TryGetComponent(out MeshCollider _)) continue;
+            Debug.LogWarning($"[Target] '{name}/{ring.name}' n'a pas de MeshCollider : lance Projet Arc > Configurer le projet.", this);
             if (ring.TryGetComponent(out CapsuleCollider capsule)) Destroy(capsule);
-            if (!ring.TryGetComponent(out MeshCollider _))
-                ring.gameObject.AddComponent<MeshCollider>().sharedMesh = ring.GetComponent<MeshFilter>().sharedMesh;
+            ring.gameObject.AddComponent<MeshCollider>().sharedMesh = ring.GetComponent<MeshFilter>().sharedMesh;
         }
     }
 
@@ -82,12 +83,15 @@ public class Target : MonoBehaviour
     public bool IsBullseye(int ringIndex) => ringIndex == rings.Count - 1;
 
     /// <summary>Appelé par la flèche quand elle se plante dans la cible.</summary>
-    public void OnArrowHit(Vector3 worldPoint)
+    public void OnArrowHit(Vector3 worldPoint) => OnArrowHit(worldPoint, false);
+
+    /// <summary>'bonus' = flèche latérale du tir triple.</summary>
+    public void OnArrowHit(Vector3 worldPoint, bool bonus)
     {
         int points = GetPoints(worldPoint, out int ring);
         bool bullseye = IsBullseye(ring);
 
-        if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterHit(points, bullseye);
+        if (ScoreManager.Instance != null) ScoreManager.Instance.RegisterHit(points, bullseye, bonus);
         else Debug.LogWarning("[Target] Pas de ScoreManager dans la scène : point non compté.");
 
         if (showPopup) StartCoroutine(Popup(worldPoint, points, bullseye));

@@ -17,6 +17,11 @@ public class ArrowController : MonoBehaviour
     bool stuck;     // true quand la flèche est plantée
     float draw;
 
+    /// <summary>Vrai quand la flèche est encochée sur un arc.</summary>
+    public bool IsNocked => nocked;
+    /// <summary>Vrai quand une main tient la flèche.</summary>
+    public bool IsHeld => grab != null && grab.isSelected;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -86,7 +91,20 @@ public class ArrowController : MonoBehaviour
 
         float t = draw / bow.maxDraw;
         float speed = Mathf.Lerp(bow.minSpeed, bow.maxSpeed, t);
-        StartCoroutine(Fire(bow.arrowNock.forward, speed));
+        Vector3 dir = bow.arrowNock.forward;
+        StartCoroutine(Fire(dir, speed));
+        bow.NotifyFired(this, dir, speed, grabPoint.position);   // ex. Bow_Monkey : tir triple
+    }
+
+    /// <summary>Remet la flèche à zéro avant de la redonner (carquois, tir triple).</summary>
+    public void ResetForReuse()
+    {
+        StopAllCoroutines();
+        if (nocked && bow != null && bow.nockedArrow == this) bow.nockedArrow = null;
+        nocked = false;
+        flying = false;
+        stuck = false;
+        if (grab != null) { grab.trackPosition = true; grab.trackRotation = true; }
     }
 
     IEnumerator Fire(Vector3 dir, float speed)

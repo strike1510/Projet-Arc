@@ -44,15 +44,27 @@ public class MovingTarget : MonoBehaviour
         seed = Random.Range(0f, 1000f) + phase * 100f;
 
         // Rigidbody cinématique : les colliders qui bougent restent bien détectés par les flèches
+        // (posé dans l'éditeur par "Projet Arc > Configurer le projet")
         rb = GetComponent<Rigidbody>();
-        if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
+        if (rb == null)
+        {
+            Debug.LogWarning($"[MovingTarget] '{name}' n'a pas de Rigidbody : lance Projet Arc > Configurer le projet.", this);
+            rb = gameObject.AddComponent<Rigidbody>();
+        }
         rb.isKinematic = true;
         rb.useGravity = false;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
 
-    void Start()
+    void Start() => Restart();
+
+    /// <summary>Repart de la position actuelle (cible réutilisée par le TargetSpawner).</summary>
+    public void Restart()
     {
+        startPosition = transform.position;
+        clock = 0f;
+        if (rb != null) rb.position = transform.position;
+
         // Start et pas Awake : le Spawner peut régler "motion" juste après l'apparition
         resolved = motion == Motion.Auto ? (IsFlying() ? Motion.HautBas : Motion.GaucheDroite) : motion;
 

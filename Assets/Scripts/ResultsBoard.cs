@@ -89,7 +89,7 @@ public class ResultsBoard : MonoBehaviour
 
     // ---------- Boutons ----------
 
-    public void NextRound() => ScoreManager.Instance?.StartNextRound();
+    public void NextRound() { if (ScoreManager.Instance != null && !ScoreManager.Instance.IsTimeUp) ScoreManager.Instance.StartNextRound(); }
     public void NewGame() => ScoreManager.Instance?.ResetGame();
     public void BackToMenu() => ScoreManager.Instance?.BackToMenu();
 
@@ -118,7 +118,9 @@ public class ResultsBoard : MonoBehaviour
             if (sm.IsRoundOver)
             {
                 endMessageText.color = endMessageColor;
-                endMessageText.text = sm.TargetReached
+                endMessageText.text = sm.IsTimeUp
+                    ? $"Temps écoulé !\n<size=70%>Total : {sm.TotalScore} pts</size>"
+                    : sm.TargetReached
                     ? $"Objectif atteint !\n<size=70%>Manche {sm.RoundNumber} : {sm.RoundScore} pts</size>"
                     : $"Manche {sm.RoundNumber} terminée\n<size=70%>{sm.RoundScore} pts</size>";
             }
@@ -126,7 +128,9 @@ public class ResultsBoard : MonoBehaviour
 
         if (statusText != null)
         {
-            if (sm.IsRoundOver)
+            if (sm.IsTimeUp)
+                statusText.text = "Temps écoulé : Nouvelle partie ou Menu";
+            else if (sm.IsRoundOver)
                 statusText.text = sm.TargetReached ? $"Manche {sm.RoundNumber} : objectif atteint !" : $"Manche {sm.RoundNumber} terminée";
             else
                 statusText.text = sm.ArrowsLeft switch
@@ -137,7 +141,13 @@ public class ResultsBoard : MonoBehaviour
                 };
         }
 
-        if (endButtons != null) endButtons.SetActive(sm.IsRoundOver);
+        if (endButtons != null)
+        {
+            endButtons.SetActive(sm.IsRoundOver);
+            // Temps écoulé : plus de "Manche suivante"
+            foreach (var b in endButtons.GetComponentsInChildren<Button>(true))
+                if (b.name.ToLower().Contains("suivante")) b.gameObject.SetActive(!sm.IsTimeUp);
+        }
 
         RefreshRows(sm);
     }
@@ -152,47 +162,53 @@ public class ResultsBoard : MonoBehaviour
         return $"hors top {Leaderboard.Size} (3e : {entries[Leaderboard.Size - 1].score} pts)";
     }
 
+    /// <summary>Nom des lignes posées dans l'éditeur sous "Lignes" (une par manche affichée).</summary>
+    public const string SlotPrefix = "Manche emplacement ";
+
     void RefreshRows(ScoreManager sm)
     {
-        if (roundsContainer == null || rowPrefab == null) return;
+        if (roundsContainer == null) return;
 
-        // On efface les lignes générées (pas celles posées à la main pour la mise en page)
-        for (int i = roundsContainer.childCount - 1; i >= 0; i--)
+        // Lignes déjà posées dans la scène (Projet Arc > Configurer le projet) : on les remplit et on montre celles utilisées
+        var slots = new List<RoundRow>();
+        foreach (Transform child in roundsContainer)
+            if (child.name.StartsWith(SlotPrefix) && child.TryGetComponent(out RoundRow rr)) slots.Add(rr);
+
+        if (slots.Count == 0)
         {
-            var child = roundsContainer.GetChild(i);
-            if (child.GetComponent<RoundRow>() != null) { child.gameObject.SetActive(false); Destroy(child.gameObject); }
+            Debug.LogWarning("[ResultsBoard] Pas de lignes posées sous 'Lignes' : lance Projet Arc > Configurer le projet.", this);
+            return;
         }
 
-        int first = Mathf.Max(0, sm.RoundScores.Count - maxRoundsShown);
-        for (int r = first; r < sm.RoundScores.Count; r++)
+        int count = Mathf.Min(slots.Count, sm.RoundScores.Count);
+        int first = sm.RoundScores.Count - count;
+        for (int i = 0; i < slots.Count; i++)
         {
-            var row = Instantiate(rowPrefab, roundsContainer);
-            row.gameObject.SetActive(true);
-            row.name = $"Manche {r + 1}";
+            var row = slots[i];
+            bool used = i < count;
+            row.gameObject.SetActive(used);
+            if (!used) continue;
 
+            int r = first + i;
             if (row.roundLabel != null) row.roundLabel.text = string.Format(roundFormat, r + 1);
             if (row.scoreLabel != null) row.scoreLabel.text = string.Format(scoreFormat, sm.RoundScores[r]);
-
             FillDots(row.dotsContainer, sm.ShotsOfRound(r), sm.arrowsPerRound);
         }
     }
 
     void FillDots(Transform container, IReadOnlyList<ScoreManager.Shot> shots, int total)
     {
-        if (container == null || dotPrefab == null) return;
+        if (container == null) return;
 
-        for (int i = container.childCount - 1; i >= 0; i--)
+        // Les ronds sont posés dans la scène : on les colore, on cache ceux en trop
+        int i = 0;
+        foreach (Transform child in container)
         {
-            var old = container.GetChild(i).gameObject;
-            old.SetActive(false);   // sort tout de suite de la mise en page
-            Destroy(old);
-        }
-
-        for (int i = 0; i < total; i++)
-        {
-            var dot = Instantiate(dotPrefab, container);
-            dot.gameObject.SetActive(true);
-            dot.color = i < shots.Count ? ShotColor(shots[i]) : colorEmpty;
+            if (!child.TryGetComponent(out Image dot)) continue;
+            bool used = i < total;
+            child.gameObject.SetActive(used);
+            if (used) dot.color = i < shots.Count ? ShotColor(shots[i]) : colorEmpty;
+            i++;
         }
     }
 
@@ -214,7 +230,7 @@ public class ResultsBoard : MonoBehaviour
     /// et remplit tous les champs. Les objets restent modifiables à la main ensuite.
     /// </summary>
     [ContextMenu("Construire / réparer le panneau")]
-    void BuildBoard()
+    public void BuildBoard()
     {
         var canvas = GetComponentInChildren<Canvas>(true);
         if (canvas == null) { Debug.LogError("[ResultsBoard] Pas de Canvas sous ce panneau.", this); return; }
@@ -265,6 +281,52 @@ public class ResultsBoard : MonoBehaviour
         UnityEditor.EditorUtility.SetDirty(this);
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
         Debug.Log("[ResultsBoard] Panneau construit et champs remplis. Pense à sauvegarder la scène (Ctrl+S).", this);
+    }
+
+    /// <summary>
+    /// Pose dans la scène les lignes des manches (maxRoundsShown) et leurs ronds (un par flèche),
+    /// copiées depuis "LigneModele" et "Rond". Rien n'est créé pendant le jeu.
+    /// </summary>
+    public void BuildSlots(int arrows)
+    {
+        if (roundsContainer == null || rowPrefab == null || dotPrefab == null) BuildBoard();
+        if (roundsContainer == null || rowPrefab == null || dotPrefab == null) return;
+
+        // Anciennes lignes posées : on les refait (nombre de flèches peut avoir changé)
+        for (int i = roundsContainer.childCount - 1; i >= 0; i--)
+        {
+            var child = roundsContainer.GetChild(i);
+            if (!child.name.StartsWith(SlotPrefix) && child.GetComponent<RoundRow>() == null) continue;
+            if (UnityEditor.PrefabUtility.IsPartOfPrefabInstance(child.gameObject)
+                && !UnityEditor.PrefabUtility.IsAddedGameObjectOverride(child.gameObject))
+            {
+                child.gameObject.SetActive(false);   // objet du prefab : on ne peut que le cacher
+                child.name = "(ancienne ligne)";
+                continue;
+            }
+            DestroyImmediate(child.gameObject);
+        }
+
+        for (int r = 0; r < maxRoundsShown; r++)
+        {
+            var row = Instantiate(rowPrefab, roundsContainer);
+            row.name = SlotPrefix + (r + 1);
+            if (row.roundLabel != null) row.roundLabel.text = string.Format(roundFormat, r + 1);
+            if (row.scoreLabel != null) row.scoreLabel.text = string.Format(scoreFormat, 0);
+            if (row.dotsContainer != null)
+            {
+                for (int i = row.dotsContainer.childCount - 1; i >= 0; i--) DestroyImmediate(row.dotsContainer.GetChild(i).gameObject);
+                for (int i = 0; i < arrows; i++)
+                {
+                    var dot = Instantiate(dotPrefab, row.dotsContainer);
+                    dot.name = "Rond " + (i + 1);
+                    dot.color = colorEmpty;
+                    dot.gameObject.SetActive(true);
+                }
+            }
+            row.gameObject.SetActive(false);
+        }
+        UnityEditor.EditorUtility.SetDirty(this);
     }
 
     RoundRow BuildRowTemplate(RectTransform root)

@@ -54,6 +54,9 @@ public class ScoreManager : MonoBehaviour
     public int RoundStartFrame { get; private set; }   // frame où la manche a commencé
     public bool TargetReached => RoundScore >= targetScore;
 
+    /// <summary>Vrai quand le temps du niveau (LevelTimer) est écoulé : plus de manche possible avant "Nouvelle partie".</summary>
+    public bool IsTimeUp { get; private set; }
+
     // Statistiques globales (pour le classement plus tard)
     public int ArrowsShot { get; private set; }
     public int Hits { get; private set; }
@@ -66,6 +69,10 @@ public class ScoreManager : MonoBehaviour
     public event Action<int> OnRoundStarted;
     /// <summary>Appelé à la fin d'une manche (numéro, score de la manche).</summary>
     public event Action<int, int> OnRoundEnded;
+    /// <summary>Appelé quand on recommence une partie (bouton "Nouvelle partie").</summary>
+    public event Action OnGameReset;
+    /// <summary>Appelé quand le temps du niveau est écoulé.</summary>
+    public event Action OnTimeUp;
 
     readonly List<int> roundScores = new();
     readonly List<List<Shot>> roundShots = new();
@@ -94,6 +101,11 @@ public class ScoreManager : MonoBehaviour
     /// <summary>Démarre la manche suivante (bouton du tableau, ou script de niveau).</summary>
     public void StartNextRound()
     {
+        if (IsTimeUp)
+        {
+            Debug.Log("[Score] Temps écoulé : pas de nouvelle manche (Nouvelle partie pour recommencer).");
+            return;
+        }
         roundScores.Add(0);
         roundShots.Add(new List<Shot>());
         ArrowsShotThisRound = 0;
@@ -111,7 +123,7 @@ public class ScoreManager : MonoBehaviour
         if (IsRoundOver) return;
         IsRoundOver = true;
 
-        string reason = TargetReached ? "objectif atteint" : "plus de flèches";
+        string reason = IsTimeUp ? "temps écoulé" : TargetReached ? "objectif atteint" : "plus de flèches";
         Debug.Log($"[Score] Fin de la manche {RoundNumber} ({reason}) : {RoundScore} pts");
         OnRoundEnded?.Invoke(RoundNumber, RoundScore);
         OnScoreChanged?.Invoke();
@@ -125,6 +137,25 @@ public class ScoreManager : MonoBehaviour
 
     // ---------- Appelés par les flèches / cibles ----------
 
+    /// <summary>Le chrono du niveau est à zéro : la manche en cours s'arrête et la partie est finie.</summary>
+    public void TimeUp()
+    {
+        if (IsTimeUp) return;
+        IsTimeUp = true;
+        Debug.Log($"[Score] Temps écoulé ! Total : {TotalScore} pts");
+        OnTimeUp?.Invoke();
+        if (!IsRoundOver) EndRound();
+        else OnScoreChanged?.Invoke();
+    }
+
+    /// <summary>Flèche bonus (tir triple) : ne consomme pas de flèche, mais la manche attend qu'elle retombe.</summary>
+    public bool RegisterBonusShot()
+    {
+        if (IsRoundOver) return false;
+        arrowsInFlight++;
+        return true;
+    }
+
     /// <summary>Une flèche part. Renvoie false si la manche est finie (le tir ne compte pas).</summary>
     public bool RegisterShot()
     {
@@ -137,15 +168,21 @@ public class ScoreManager : MonoBehaviour
         return true;
     }
 
-    public void RegisterHit(int points, bool bullseye)
+    public void RegisterHit(int points, bool bullseye) => RegisterHit(points, bullseye, false);
+
+    /// <summary>Impact. 'bonus' = flèche du tir triple : ses points comptent, mais pas de rond en plus sur le panneau.</summary>
+    public void RegisterHit(int points, bool bullseye, bool bonus)
     {
         if (IsRoundOver) return;
         arrowsInFlight = Mathf.Max(0, arrowsInFlight - 1);
 
-        Hits++;
-        if (bullseye) Bullseyes++;
+        if (!bonus)
+        {
+            Hits++;
+            if (bullseye) Bullseyes++;
+            roundShots[^1].Add(new Shot { points = points, bullseye = bullseye });
+        }
         roundScores[^1] += points;
-        roundShots[^1].Add(new Shot { points = points, bullseye = bullseye });
         TotalScore += points;
 
         Debug.Log($"[Score] {PlayerName} : +{points} → {RoundScore}/{targetScore} pts (flèches restantes : {ArrowsLeft})");
@@ -153,10 +190,13 @@ public class ScoreManager : MonoBehaviour
         CheckEndOfRound();
     }
 
-    public void RegisterMiss()
+    public void RegisterMiss() => RegisterMiss(false);
+
+    public void RegisterMiss(bool bonus)
     {
         if (IsRoundOver) return;
         arrowsInFlight = Mathf.Max(0, arrowsInFlight - 1);
+        if (bonus) { CheckEndOfRound(); return; }   // flèche bonus ratée : rien à afficher
         roundShots[^1].Add(new Shot { miss = true });
 
         Debug.Log($"[Score] Raté → {RoundScore}/{targetScore} pts (flèches restantes : {ArrowsLeft})");
@@ -190,6 +230,9 @@ public class ScoreManager : MonoBehaviour
     {
         SubmitGame();
         GameSubmitted = false;
+        IsTimeUp = false;
+        IsRoundOver = false;
+        OnGameReset?.Invoke();
         roundScores.Clear();
         roundShots.Clear();
         TotalScore = ArrowsShot = Hits = Bullseyes = 0;
