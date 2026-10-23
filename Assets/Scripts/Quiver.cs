@@ -6,8 +6,8 @@ using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
-/// <summary>
-/// Carquois dans le dos du joueur : on passe la main derrière soi (derrière la tête, par-dessus l'épaule
+/// 
+/// Un Carquois dans le dos du joueur : on passe la main derrière soi (derrière la tête, par-dessus l'épaule
 /// ou dans le dos), on serre le grip, et une flèche apparaît dans la main. On la garde tant que le grip est serré.
 /// La flèche donnée est du même type que l'arc tenu dans l'autre main.
 ///
@@ -16,7 +16,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 ///
 /// La flèche est mise en main avec "l'interaction manuelle" de XRI (StartManualInteraction) :
 /// la main la tient comme si on l'avait attrapée, et la lâche quand on relâche le grip.
-/// </summary>
+/// 
+/// par contre c'est 3 flèches qui sont réutilisé, elle revienne dans le dos presque instantannémant
 public class Quiver : MonoBehaviour
 {
     [Tooltip("Tête du joueur (Main Camera de l'XR Origin). Vide = trouvée toute seule.")]
@@ -108,7 +109,7 @@ public class Quiver : MonoBehaviour
         if (debugLog) Debug.Log($"[Quiver] Pas de flèche pour '{hand.name}' : {why}.", this);
     }
 
-    /// <summary>Type de l'arc tenu par une autre main (null si aucun).</summary>
+    // Type de l'arc tenu par une autre main (null si aucun)
     static string TypeHeldByOtherHand(XRBaseInputInteractor hand)
     {
         foreach (var bow in BowController.All)

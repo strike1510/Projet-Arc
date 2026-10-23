@@ -12222,7 +12222,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3770061231272980169, guid: 62d4420a059fb3f43ae287dad19f4efb, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.597
+      value: 0.766
       objectReference: {fileID: 0}
     - target: {fileID: 3770061231272980169, guid: 62d4420a059fb3f43ae287dad19f4efb, type: 3}
       propertyPath: m_LocalPosition.z
@@ -21230,7 +21230,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5913112229828483186, guid: d56b51fe611c455479013d3522e5083a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.134
+      value: 0.282
       objectReference: {fileID: 0}
     - target: {fileID: 5913112229828483186, guid: d56b51fe611c455479013d3522e5083a, type: 3}
       propertyPath: m_LocalPosition.z
@@ -24042,7 +24042,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -45250,7 +45250,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9157991129836525047, guid: 4a90a6212934ab2428612d02a20f5432, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.00003
+      value: 0.323
       objectReference: {fileID: 0}
     - target: {fileID: 9157991129836525047, guid: 4a90a6212934ab2428612d02a20f5432, type: 3}
       propertyPath: m_LocalPosition.z
@@ -48265,7 +48265,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5895793603557910750, guid: bd39d6821e2958046919808cac92fa4d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.00001
+      value: 0.253
       objectReference: {fileID: 0}
     - target: {fileID: 5895793603557910750, guid: bd39d6821e2958046919808cac92fa4d, type: 3}
       propertyPath: m_LocalPosition.z
@@ -68250,7 +68250,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6590939092950117581, guid: 0bfd541a923a00d4fa6e1bef22d5e85c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.165
+      value: 0.378
       objectReference: {fileID: 0}
     - target: {fileID: 6590939092950117581, guid: 0bfd541a923a00d4fa6e1bef22d5e85c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -68562,7 +68562,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2

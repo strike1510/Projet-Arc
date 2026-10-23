@@ -23,6 +23,13 @@ public class ScoreManager : MonoBehaviour
     [Tooltip("Niveau utilisé pour le classement quand on lance la scène sans passer par le menu (0 = Niveau 1).")]
     public int levelIndexIfNoMenu = 0;
 
+    [Header("Son de victoire")]
+    [Tooltip("Musique jouée quand le score cible est atteint.")]
+    public AudioClip victoryClip;
+    [Range(0f, 1f)] public float victoryVolume = 1f;
+    [Tooltip("Musique de fond à mettre en pause pendant la victoire (optionnel).")]
+    public AudioSource backgroundMusic;
+
     public string PlayerName => GameSettings.PlayerName;
 
     /// <summary>Niveau en cours (0 = Niveau 1), pour le classement.</summary>
@@ -77,6 +84,7 @@ public class ScoreManager : MonoBehaviour
     readonly List<int> roundScores = new();
     readonly List<List<Shot>> roundShots = new();
     int arrowsInFlight;
+    AudioSource sfx;   // lecteur du son de victoire
 
     void Awake()
     {
@@ -87,6 +95,10 @@ public class ScoreManager : MonoBehaviour
             return;
         }
         Instance = this;
+
+        sfx = gameObject.AddComponent<AudioSource>();
+        sfx.playOnAwake = false;
+        sfx.spatialBlend = 0f;   // 2D : s'entend partout
     }
 
     void Start() => StartNextRound();
@@ -106,6 +118,11 @@ public class ScoreManager : MonoBehaviour
             Debug.Log("[Score] Temps écoulé : pas de nouvelle manche (Nouvelle partie pour recommencer).");
             return;
         }
+
+        // Arrête la musique de victoire et relance la musique de fond
+        if (sfx != null) sfx.Stop();
+        if (backgroundMusic != null) backgroundMusic.UnPause();
+
         roundScores.Add(0);
         roundShots.Add(new List<Shot>());
         ArrowsShotThisRound = 0;
@@ -125,8 +142,19 @@ public class ScoreManager : MonoBehaviour
 
         string reason = IsTimeUp ? "temps écoulé" : TargetReached ? "objectif atteint" : "plus de flèches";
         Debug.Log($"[Score] Fin de la manche {RoundNumber} ({reason}) : {RoundScore} pts");
+
+        // Victoire : le score cible est atteint
+        if (TargetReached) PlayVictory();
+
         OnRoundEnded?.Invoke(RoundNumber, RoundScore);
         OnScoreChanged?.Invoke();
+    }
+
+    void PlayVictory()
+    {
+        if (victoryClip == null) return;
+        if (backgroundMusic != null) backgroundMusic.Pause();
+        sfx.PlayOneShot(victoryClip, victoryVolume);
     }
 
     void CheckEndOfRound()
