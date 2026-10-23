@@ -68029,6 +68029,67 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
+--- !u!1001 &1728102774
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.00001
+      objectReference: {fileID: 0}
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.00003
+      objectReference: {fileID: 0}
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -9.49997
+      objectReference: {fileID: 0}
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 490127523832781234, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2055763892215801653, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: autoRotateSpeed
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 7324043492405754943, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
+      propertyPath: m_Name
+      value: Selecteurd'arcs
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 829eb99c172bf9f4dba05b0cf472e987, type: 3}
 --- !u!1 &1730657233
 GameObject:
   m_ObjectHideFlags: 0
@@ -80263,3 +80324,4 @@ SceneRoots:
   - {fileID: 1071377363}
   - {fileID: 1978094624}
   - {fileID: 602181814}
+  - {fileID: 1728102774}
