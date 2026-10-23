@@ -21,9 +21,3 @@ MonoBehaviour:
   maxDraw: 0.5
   effectName: "Train\xE9e de feuille"
   effectDescription: "Laisse une train\xE9e de spore et de feuilles derri\xE8re elle qui tombe doucement et disparait au bout de 5 secondes, pas trop voyante pour ne pas empecher le joueur de viser"
-  tripleShot: 1
-  tripleSpread: 4
-  bonusPointsFactor: 0.5
-  leafTrail: 1
-  lightning: 0
-  burnDuration: 2

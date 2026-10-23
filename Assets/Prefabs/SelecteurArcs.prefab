@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4718203946512230001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4718203946512230002}
+  - component: {fileID: 4718203946512230003}
+  m_Layer: 0
+  m_Name: "S\xE9lecteur d'arcs"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4718203946512230002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4718203946512230001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4718203946512230003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4718203946512230001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db99c8a76a6f42d781f2c5bb78e7a199, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BowSummoner
+  bows:
+  - {fileID: 11400000, guid: 85b8622e98fd460cbfebcbad8e5135a0, type: 2}
+  - {fileID: 11400000, guid: bbc8d9ed62fa4c798bf063d6c9cbf3c5, type: 2}
+  - {fileID: 11400000, guid: 1f3de6155724437bbc2718b1932a745c, type: 2}
+  - {fileID: 11400000, guid: 0d8f44528f0d490497819070573183c1, type: 2}
+  rotateSpeed: 120
+  disableTurnWhileOpen: 1
+  radius: 0.8
+  heightBelowHead: 0.25
+  appearStagger: 0.06
+  panelOffset: {x: 0, y: -0.42, z: 0.22}
+  panelScale: 0.0005
+  keyboardTest: 1

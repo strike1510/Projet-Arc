@@ -2,10 +2,10 @@ using UnityEngine;
 
 /// <summary>
 /// Fiche d'un arc : son prefab, ses stats et son effet spécial.
-/// Création : clic droit dans le dossier Project > Create > Tir à l'arc > Données d'arc.
-/// Les stats sont copiées dans le BowController de l'arc quand l'armoire le fait apparaître.
+/// Création : clic droit dans le dossier Project > Create > Arcs > Preset d'arc.
+/// Les stats sont copiées dans le BowController de l'arc quand le sélecteur le fait apparaître.
 /// </summary>
-[CreateAssetMenu(fileName = "NouvelArc", menuName = "Tir à l'arc/Données d'arc")]
+[CreateAssetMenu(fileName = "NouvelArc", menuName = "Arcs/Preset d'arc")]
 public class BowData : ScriptableObject
 {
     [Header("Présentation")]
@@ -36,27 +36,7 @@ public class BowData : ScriptableObject
     [TextArea(2, 3)]
     public string effectDescription = "";
 
-    [Header("Effets en jeu")]
-    [Tooltip("Chaque tir lance aussi 2 flèches bonus, une de chaque côté.")]
-    public bool tripleShot;
-
-    [Tooltip("Écart entre la flèche principale et les flèches bonus (degrés).")]
-    [Range(0f, 20f)] public float tripleSpread = 4f;
-
-    [Tooltip("Part des points donnée par une flèche bonus qui touche une cible (0.5 = moitié).")]
-    [Range(0f, 1f)] public float bonusPointsFactor = 0.5f;
-
-    [Tooltip("Les flèches laissent une traînée discrète de feuilles et de spores.")]
-    public bool leafTrail;
-
-    [Tooltip("La flèche se change en éclair pendant le vol et laisse une brûlure à l'impact.")]
-    public bool lightning;
-
-    [Tooltip("Durée de la brûlure laissée par la foudre (s).")]
-    public float burnDuration = 2f;
-
     public bool HasEffect => !string.IsNullOrWhiteSpace(effectName);
-    public bool HasGameplayEffect => tripleShot || leafTrail || lightning;
 
     public void ApplyTo(BowController bow)
     {

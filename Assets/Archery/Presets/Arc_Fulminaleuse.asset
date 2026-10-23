@@ -18,12 +18,6 @@ MonoBehaviour:
   prefab: {fileID: 6528462058049417828, guid: bd39d6821e2958046919808cac92fa4d, type: 3}
   minSpeed: 15
   maxSpeed: 50
-  maxDraw: 0.1
+  maxDraw: 0.7
   effectName: Foudre
   effectDescription: "La fl\xE8che se transforme en foudre et quand elle touche sa cible laisse une trace de brulure qui disparait au bout de deux secondes"
-  tripleShot: 0
-  tripleSpread: 4
-  bonusPointsFactor: 0.5
-  leafTrail: 0
-  lightning: 1
-  burnDuration: 2

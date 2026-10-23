@@ -190,6 +190,7 @@ public class ScoreManager : MonoBehaviour
         CheckEndOfRound();
     }
 
+
     public void RegisterBonus(int points)
     {
         if (IsRoundOver || points <= 0) return;

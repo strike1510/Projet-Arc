@@ -4,7 +4,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 /// <summary>
-/// Comportement d'un arc du sélecteur (BowSummoner). Ajouté automatiquement : rien à mettre sur les prefabs.
+/// Comportement d'un arc du sélecteur (BowSummoner). Ajouté automatiquement : rien à mettre sur les arcs.
 ///  - caché : n'existe pas dans la scène tant qu'on n'ouvre pas le sélecteur
 ///  - dans le cercle : flotte autour du joueur avec son panneau
 ///  - pris en main : arc normal (on peut encocher)
@@ -53,9 +53,17 @@ public class FloatingBow : MonoBehaviour
     Vector3 lastPos, lastHeadPos, velocity, followVel;
     float followYaw, phase;
     Coroutine anim;
+    bool setupDone;
 
-    void Awake()
+    void Awake() => Setup();
+
+    // Préparation (une seule fois). Appelée aussi par Init : un arc repris dans la scène
+    // peut être désactivé, et Unity ne lance Awake qu'à sa première activation.
+    void Setup()
     {
+        if (setupDone) return;
+        setupDone = true;
+
         grab = GetComponent<XRGrabInteractable>();
         bowController = GetComponent<BowController>();
         baseScale = transform.localScale;
@@ -76,19 +84,23 @@ public class FloatingBow : MonoBehaviour
         // Axes de l'arc, pour pouvoir le présenter droit quel que soit le modèle
         if (bowController.arrowNock != null)
             localForward = transform.InverseTransformDirection(bowController.arrowNock.forward);
-        var str = GetComponentInChildren<BowString>();
+        var str = GetComponentInChildren<BowString>(true);   // true : marche aussi sur un arc désactivé
         if (str != null && str.stringTop != null && str.stringBottom != null)
             localUp = transform.InverseTransformDirection(str.stringTop.position - str.stringBottom.position);
         localUp = Vector3.ProjectOnPlane(localUp, localForward);
         if (localUp.sqrMagnitude < 1e-4f) localUp = Vector3.up;
         localForward.Normalize();
         localUp.Normalize();
+    }
 
-        // Les arcs qui flottent autour du joueur ne doivent pas le bloquer
+    void OnEnable()
+    {
+        // Les arcs qui flottent autour du joueur ne doivent pas le bloquer.
+        // À refaire à chaque activation : Unity l'oublie quand un collider est désactivé.
         var body = FindAnyObjectByType<CharacterController>();
-        if (body != null)
-            foreach (var c in GetComponentsInChildren<Collider>(true))
-                Physics.IgnoreCollision(c, body);
+        if (body == null) return;
+        foreach (var c in GetComponentsInChildren<Collider>())
+            if (c.enabled) Physics.IgnoreCollision(c, body);
     }
 
     void OnDestroy()
@@ -103,6 +115,9 @@ public class FloatingBow : MonoBehaviour
     /// <summary>Appelé par le sélecteur juste après l'apparition de l'arc : il reste caché.</summary>
     public void Init(BowSummoner owner, BowData data, BowInfoPanel infoPanel)
     {
+        Setup();
+        transform.SetParent(null, true);     // l'arc vit à la racine de la scène (un arc repris dans la scène peut avoir un parent)
+        baseScale = transform.localScale;
         summoner = owner;
         Data = data;
         panel = infoPanel;
@@ -235,7 +250,34 @@ public class FloatingBow : MonoBehaviour
 
     // ---------- Saisie / lâcher ----------
 
-    void OnGrabbed(SelectEnterEventArgs args)
+    void OnGrabbed(SelectEnterEventArgs args) => Grabbed();
+
+    void OnReleased(SelectExitEventArgs args)
+    {
+        if (grab.isSelected) return;   // encore tenu par l'autre main
+        Released();
+    }
+
+    // ---------- Test au clavier (BowKeyboardTester) ----------
+
+    /// <summary>Prend l'arc "en main" sans manette.</summary>
+    public void DebugGrab() => Grabbed();
+
+    /// <summary>Lâche l'arc tenu au clavier avec la vitesse donnée (zéro = lâché doucement).</summary>
+    public void DebugRelease(Vector3 handVelocity)
+    {
+        if (CurrentState != State.Held) return;
+        velocity = handVelocity;
+        Released();
+    }
+
+    /// <summary>Place l'arc tenu au clavier : axe de tir vers 'forward'.</summary>
+    public void SetHeldPose(Vector3 position, Vector3 forward, Vector3 up)
+    {
+        transform.SetPositionAndRotation(position, PoseRotation(forward, up));
+    }
+
+    void Grabbed()
     {
         bool wasInMenu = CurrentState == State.InMenu;
         StopAnim();
@@ -248,10 +290,8 @@ public class FloatingBow : MonoBehaviour
         if (summoner != null) summoner.OnBowGrabbed(this, wasInMenu);
     }
 
-    void OnReleased(SelectExitEventArgs args)
+    void Released()
     {
-        if (grab.isSelected) return;   // encore tenu par l'autre main
-
         if (velocity.magnitude >= throwSpeed)
         {
             SetState(State.Vanishing);
@@ -266,7 +306,7 @@ public class FloatingBow : MonoBehaviour
     IEnumerator Materialize(float delay)
     {
         if (delay > 0f) yield return new WaitForSeconds(delay);
-        EffectAssets.Sparkle(transform.position, Data != null ? Data.color : Color.white);
+        SummonSparkle.Play(transform.position, Data != null ? Data.color : Color.white);
 
         const float duration = 0.4f;
         for (float t = 0f; t < duration; t += Time.deltaTime)
@@ -295,7 +335,7 @@ public class FloatingBow : MonoBehaviour
             transform.localScale = startScale * (1f - k * k);
             yield return null;
         }
-        EffectAssets.Sparkle(transform.position, Data != null ? Data.color : Color.white);
+        SummonSparkle.Play(transform.position, Data != null ? Data.color : Color.white);
         anim = null;
         Hide();
     }

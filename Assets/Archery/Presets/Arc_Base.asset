@@ -21,9 +21,3 @@ MonoBehaviour:
   maxDraw: 0.5
   effectName: 
   effectDescription: 
-  tripleShot: 0
-  tripleSpread: 4
-  bonusPointsFactor: 0.5
-  leafTrail: 0
-  lightning: 0
-  burnDuration: 2
