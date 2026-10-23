@@ -92,7 +92,7 @@ MonoBehaviour:
     m_Reference: {fileID: 0}
   rotateSpeed: 120
   disableTurnWhileOpen: 1
-  autoRotateSpeed: 8
+  autoRotateSpeed: 24
   radius: 0.8
   heightBelowHead: 0.25
   appearStagger: 0.06
