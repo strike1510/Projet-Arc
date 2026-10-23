@@ -5,7 +5,8 @@ using UnityEngine.InputSystem;
 /// OUTIL DE TEST SANS CASQUE (à ne pas laisser dans la scène finale).
 /// Tir instantané (pas de flèche, pas de physique) : ce qui est sous la souris est touché.
 ///   Clic gauche ou Espace : tire là où pointe la souris (cible → points au-dessus, oiseau/pomme → bonus).
-///   N : manche suivante quand la manche est finie.
+///   ZQSD / flèches : marcher, A / E : tourner, Maj : courir (en AZERTY ; WASD + Q/E en QWERTY).
+///   N : manche suivante quand la manche est finie.   M : retour au menu.
 ///   Clic sur le panneau des résultats : la caméra se place en face pour le lire (et cliquer ses boutons).
 ///   Clic droit ou Échap : retour à la position de tir (automatique quand une nouvelle manche commence).
 /// Les points passent par le vrai chemin : Target / BirdTarget → ScoreManager.
@@ -17,6 +18,12 @@ public class TestShooter : MonoBehaviour
 
     [Tooltip("Affiche un petit trait jaune pendant un instant pour voir le tir.")]
     public bool showTracer = true;
+
+    [Header("Marche au clavier (test sans casque)")]
+    [Tooltip("ZQSD / WASD ou flèches pour marcher, A/E pour tourner, Maj pour courir.")]
+    public bool keyboardWalk = true;
+    public float walkSpeed = 3f;
+    public float turnSpeed = 90f;
 
     [Header("Vue du panneau")]
     [Tooltip("Distance entre la caméra et le panneau quand on clique dessus (m).")]
@@ -65,6 +72,14 @@ public class TestShooter : MonoBehaviour
             return;
         }
 
+        // M : retour au menu (raccourci de test, comme le bouton Menu du panneau)
+        if (kb != null && kb.mKey.wasPressedThisFrame)
+        {
+            var resultsBoard = FindAnyObjectByType<ResultsBoard>();
+            if (resultsBoard != null) resultsBoard.BackToMenu();
+            return;
+        }
+
         // Vue du panneau : clic droit / Échap pour revenir ; les clics gauches vont aux boutons du panneau
         if (inBoardView)
         {
@@ -72,6 +87,8 @@ public class TestShooter : MonoBehaviour
                 LeaveBoardView();
             return;
         }
+
+        if (keyboardWalk && kb != null) Walk(kb);
 
         bool click = mouse != null && mouse.leftButton.wasPressedThisFrame;
         bool space = kb != null && kb.spaceKey.wasPressedThisFrame;
@@ -91,6 +108,35 @@ public class TestShooter : MonoBehaviour
         if (sm != null && (sm.IsRoundOver || sm.RoundStartFrame == Time.frameCount)) return;
 
         Shoot(ray);
+    }
+
+    // ---------- Marche ----------
+
+    void Walk(Keyboard kb)
+    {
+        if (rig == null) return;
+        // Clavier français (ZQSD) ou anglais (WASD) : Unity lit les touches par position, donc W/A/S/D = Z/Q/S/D en AZERTY
+        float fwd = (kb.wKey.isPressed || kb.upArrowKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed || kb.downArrowKey.isPressed ? 1f : 0f);
+        float side = (kb.dKey.isPressed || kb.rightArrowKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed || kb.leftArrowKey.isPressed ? 1f : 0f);
+        float turn = (kb.eKey.isPressed ? 1f : 0f) - (kb.qKey.isPressed ? 1f : 0f);
+
+        if (turn != 0f) rig.RotateAround(cam.transform.position, Vector3.up, turn * turnSpeed * Time.deltaTime);
+        if (fwd == 0f && side == 0f) return;
+
+        Vector3 f = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+        Vector3 r = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up).normalized;
+        float speed = walkSpeed * (kb.leftShiftKey.isPressed ? 2f : 1f);
+        Vector3 move = (f * fwd + r * side).normalized * speed * Time.deltaTime;
+
+        var cc = rig.GetComponent<CharacterController>();
+        if (cc != null && cc.enabled) cc.Move(move + Vector3.down * 2f * Time.deltaTime);
+        else
+        {
+            Vector3 p = rig.position + move;
+            if (Physics.Raycast(p + Vector3.up * 2f, Vector3.down, out RaycastHit g, 10f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                p.y = g.point.y;
+            rig.position = p;
+        }
     }
 
     // ---------- Tir instantané ----------
@@ -119,6 +165,15 @@ public class TestShooter : MonoBehaviour
         if (bird != null)
         {
             bird.OnArrowHit(point, ray.direction);
+            return;
+        }
+
+        // Ninja, animal…
+        var creature = hasHit ? hit.collider.GetComponentInParent<IArrowHittable>() : null;
+        if (creature != null && creature.CanBeHit)
+        {
+            if (sm != null) sm.RegisterHit(0, false);   // la flèche est comptée comme tirée, pas comme ratée
+            creature.OnArrowHit(point, ray.direction);
             return;
         }
 

@@ -256,6 +256,18 @@ public class ArrowHit : MonoBehaviour
         var target = hit.collider.GetComponentInParent<Target>();
         if (target != null) transform.SetParent(target.transform, true);   // suit la cible si elle bouge
 
+        // Ninja, animal… : il réagit, la flèche reste plantée dedans et le suit
+        var creature = target == null ? hit.collider.GetComponentInParent<IArrowHittable>() : null;
+        if (creature != null && creature.CanBeHit)
+        {
+            transform.SetParent(((Component)creature).transform, true);
+            stuck = true;
+            flying = false;
+            counted = false;
+            creature.OnArrowHit(hit.point, dir);
+            return;
+        }
+
         stuck = true;
         if (target == null) Debug.Log($"[ArrowHit] Flèche plantée dans '{hit.collider.name}' (pas une cible).", hit.collider);
         Debug.DrawLine(hit.point - dir * 0.3f, hit.point, target != null ? Color.green : Color.red, 10f);
@@ -300,6 +312,17 @@ public class ArrowHit : MonoBehaviour
 
         var target = collision.collider.GetComponentInParent<Target>();
         if (target != null) transform.SetParent(target.transform, true);
+
+        var creature = target == null ? collision.collider.GetComponentInParent<IArrowHittable>() : null;
+        if (creature != null && creature.CanBeHit)
+        {
+            transform.SetParent(((Component)creature).transform, true);
+            stuck = true;
+            flying = false;
+            counted = false;
+            creature.OnArrowHit(point, lastDir);
+            return;
+        }
 
         stuck = true;
         if (target == null) Debug.Log($"[ArrowHit] Flèche arrêtée par '{collision.collider.name}' (pas une cible).", collision.collider);

@@ -45,7 +45,19 @@ public class TargetSpawner : MonoBehaviour
     [Tooltip("Délai avant la première apparition (s).")]
     public float firstDelay = 3f;
 
-    [Header("Où (autour de la direction du regard)")]
+    public enum Zone { DevantLeJoueur, Carre }
+
+    [Header("Zone")]
+    [Tooltip("DevantLeJoueur : dans le champ de vision. Carre : n'importe où dans un carré centré sur cet objet.")]
+    public Zone zone = Zone.DevantLeJoueur;
+
+    [Tooltip("Carre : largeur (X) et profondeur (Z) du carré, en m. Le carré suit la rotation de cet objet.")]
+    public Vector2 squareSize = new Vector2(30f, 30f);
+
+    [Tooltip("Carre : la cible doit être visible depuis le joueur (pas cachée derrière un arbre).")]
+    public bool mustBeVisible = true;
+
+    [Header("Où (mode DevantLeJoueur)")]
     [Tooltip("Distance au joueur (m), min et max.")]
     public Vector2 distance = new Vector2(5f, 10f);
 
@@ -98,8 +110,20 @@ public class TargetSpawner : MonoBehaviour
 
         for (int attempt = 0; attempt < 15; attempt++)
         {
-            Vector3 dir = Quaternion.AngleAxis(Random.Range(-maxAngle, maxAngle), Vector3.up) * forward;
-            Vector3 pos = eye + dir * Random.Range(distance.x, distance.y);
+            Vector3 dir, pos;
+            if (zone == Zone.Carre)
+            {
+                // Point au hasard dans le carré (dans le repère de cet objet)
+                Vector3 local = new Vector3(Random.Range(-0.5f, 0.5f) * squareSize.x, 0f, Random.Range(-0.5f, 0.5f) * squareSize.y);
+                pos = transform.position + transform.rotation * local;
+                dir = Vector3.ProjectOnPlane(pos - eye, Vector3.up).normalized;   // la cible regarde le joueur
+                if (dir.sqrMagnitude < 0.01f) dir = forward;
+            }
+            else
+            {
+                dir = Quaternion.AngleAxis(Random.Range(-maxAngle, maxAngle), Vector3.up) * forward;
+                pos = eye + dir * Random.Range(distance.x, distance.y);
+            }
 
             // Hauteur : au-dessus du sol trouvé sous ce point
             float groundY = eye.y - 1.6f;
@@ -111,7 +135,7 @@ public class TargetSpawner : MonoBehaviour
             // Pas dans un arbre ou un rocher, et visible depuis le joueur
             Vector3 check = fromGround ? pos + Vector3.up * 1.2f : pos;
             if (Physics.CheckSphere(check, clearRadius, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
-            if (Physics.Linecast(eye, check, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
+            if ((zone == Zone.DevantLeJoueur || mustBeVisible) && Physics.Linecast(eye, check, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
 
             Spawn(pos, dir);
             Debug.Log($"[TargetSpawner] Cible apparue à {Vector3.Distance(eye, pos):0.0} m de la caméra '{cam.name}'.");
@@ -248,6 +272,16 @@ public class TargetSpawner : MonoBehaviour
     // Montre la zone d'apparition (vue de dessus) quand le Spawner est sélectionné
     void OnDrawGizmosSelected()
     {
+        if (zone == Zone.Carre)
+        {
+            Gizmos.color = new Color(0.3f, 1f, 0.3f, 0.9f);
+            Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+            Gizmos.DrawWireCube(new Vector3(0f, (heightAboveGround.x + heightAboveGround.y) * 0.5f, 0f),
+                new Vector3(squareSize.x, Mathf.Max(0.1f, heightAboveGround.y - heightAboveGround.x), squareSize.y));
+            Gizmos.DrawWireCube(Vector3.zero, new Vector3(squareSize.x, 0f, squareSize.y));
+            Gizmos.matrix = Matrix4x4.identity;
+            return;
+        }
         var c = Camera.main;
         if (c == null) return;
         Vector3 eye = c.transform.position;

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anglais - Objectif TOEIC 600</title>
+<style>
+:root{--paper:#0f1115;--panel:#171a21;--panel2:#1d2129;--ink:#e8e9ee;--ink-dim:#a3a8b5;--rule:#2d3340;--accent:#5eead4;--accent2:#f9a341;--good:#4ade80;--bad:#fb7185;--blue:#75a7ff;--mono:'JetBrains Mono','IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;--serif:'Spectral','Iowan Old Style',Georgia,serif;--sans:'Inter','Segoe UI',sans-serif;--radius:10px}
+*{box-sizing:border-box}html,body{margin:0;padding:0;max-width:100%;overflow-x:hidden}body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:16px}@font-face{font-family:'Spectral';src:local('Georgia')}
+.shell{display:flex;min-height:100vh}.sidebar{width:270px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--rule);padding:28px 18px;position:sticky;top:0;height:100vh;overflow-y:auto}.brand{font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}.brand-sub{font-family:var(--serif);font-size:1.35rem;margin:0 0 26px;line-height:1.2}.nav-group{margin-bottom:22px}.nav-group h4{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 8px 4px}.nav-link{display:flex;align-items:baseline;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;color:var(--ink-dim);font-size:.92rem;text-decoration:none}.nav-link .idx{font-family:var(--mono);font-size:.74rem;color:var(--accent2);width:22px;flex-shrink:0}.nav-link:hover,.nav-link.active{background:var(--panel2);color:var(--accent);font-weight:600}.footer-note{margin-top:50px;padding-top:18px;border-top:1px solid var(--rule);color:var(--ink-dim);font-size:.82rem;font-family:var(--mono)}
+.main{flex:1;min-width:0;width:100%;padding:48px 56px 120px;max-width:1240px}.menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:60;width:42px;height:42px;border-radius:8px;background:var(--panel2);border:1px solid var(--rule);color:var(--ink);align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer}.page{display:none}.page.active{display:block;animation:fadein .35s ease}@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}.page-title{font-family:var(--serif);font-size:2.4rem;margin:0 0 6px;display:flex;align-items:baseline;gap:14px}.page-title .num{color:var(--accent2);font-family:var(--mono);font-size:1.1rem}.page-lede{color:var(--ink-dim);margin:0 0 34px;max-width:920px;font-size:1.02rem}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.wide{display:grid;grid-template-columns:minmax(500px,1fr) minmax(330px,.75fr);gap:22px;align-items:start}.card,.panel,.quiz-card,.flashcard,.fill-card,.mini{background:var(--panel);border:1px solid var(--rule);border-radius:var(--radius);padding:20px 24px;margin-bottom:18px}.card h3,.panel h3,.quiz-card h3,.flashcard h3,.fill-card h3,.mini h3{font-family:var(--serif);font-size:1.22rem;margin:0 0 8px;color:var(--ink)}.tag{display:inline-block;font-family:var(--mono);font-size:.7rem;color:#0a1612;background:var(--accent);border-radius:4px;padding:2px 7px;margin:0 6px 8px 0}.tag.orange{background:var(--accent2)}.tag.blue{background:var(--blue)}.small{font-size:.88rem;color:var(--ink-dim)}
+.formula,pre{background:var(--panel2);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;margin:8px 0;font-size:.94rem;overflow-x:auto;font-family:var(--mono);white-space:pre-wrap;color:var(--ink)}.warning{background:#241717;border-left:3px solid var(--bad);padding:10px 14px;border-radius:6px;margin:8px 0;color:#fecaca;font-size:.92rem}.hint{background:#15201d;border:1px solid #1e3a32;border-radius:6px;padding:10px 14px;margin:8px 0;font-size:.9rem;color:#bdeedb}.hint b{color:var(--accent)}.key-table{width:100%;border-collapse:collapse;font-size:.9rem;margin:10px 0 12px}.key-table th,.key-table td{border:1px solid var(--rule);padding:8px 10px;text-align:left;vertical-align:top}.key-table th{background:var(--panel2);color:var(--accent2);font-family:var(--mono);font-size:.76rem;letter-spacing:.04em}.steps{counter-reset:step}.step{position:relative;padding-left:42px;margin:10px 0;color:var(--ink-dim)}.step:before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#0a1612;display:grid;place-items:center;font-family:var(--mono);font-weight:700}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.btn{font-family:var(--mono);font-size:.8rem;letter-spacing:.04em;background:var(--panel2);color:var(--ink);border:1px solid var(--rule);padding:9px 13px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--accent);color:var(--accent)}.btn.primary{background:var(--accent);color:#0a1612;border-color:var(--accent);font-weight:700}.chiprow{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}.chip{border:1px solid var(--rule);background:var(--panel2);color:var(--ink-dim);font-family:var(--mono);font-size:.75rem;border-radius:999px;padding:7px 10px;cursor:pointer}.chip.active,.chip:hover{border-color:var(--accent);color:var(--accent)}.option{padding:10px 14px;border:1px solid var(--rule);border-radius:8px;cursor:pointer;font-size:.92rem;background:var(--panel2);margin:8px 0}.option.correct{border-color:var(--good);background:#142a1c;color:#bbf7d0}.option.incorrect{border-color:var(--bad);background:#2a1414;color:#fecaca}.explain{padding:10px 14px;border-radius:8px;background:var(--panel2);border-left:3px solid var(--accent2);font-size:.88rem;color:var(--ink-dim);display:none}.quiz-card.revealed .explain{display:block}.score-banner{position:sticky;top:0;z-index:5;background:var(--panel2);border:1px solid var(--rule);border-radius:10px;padding:14px 20px;margin-bottom:20px;font-family:var(--mono);display:flex;justify-content:space-between;align-items:center}.score{color:var(--accent);font-weight:700;font-size:1.1rem}
+.flip{min-height:170px;cursor:pointer}.flip .back{display:none}.flip.flipped .front{display:none}.flip.flipped .back{display:block}.front .word{font-family:var(--serif);font-size:1.55rem;color:var(--accent);margin:8px 0}.back .word{font-family:var(--serif);font-size:1.25rem;color:var(--accent2);margin:8px 0}.fill{background:#0b0f15;border:1px solid var(--rule);border-radius:6px;color:var(--ink);font-family:var(--mono);font-size:.95rem;padding:7px 9px;min-width:120px;margin:0 4px}.fill.correct{border-color:var(--good);background:#10251a}.fill.wrong{border-color:var(--bad);background:#2a1414}.answer-note{display:none;margin-top:10px}.answer-note.show{display:block}.progress{height:8px;background:var(--panel2);border-radius:999px;overflow:hidden;border:1px solid var(--rule);margin:10px 0 4px}.bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .2s}.checkline{display:flex;gap:8px;align-items:flex-start;margin:8px 0;color:var(--ink-dim)}.checkline input{margin-top:5px}
+.phrase{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--panel2);border:1px solid var(--rule);border-radius:8px;padding:10px;margin:8px 0}.phrase b{color:var(--accent)}.phrase span:last-child{color:var(--ink-dim)}.readbox{background:#101720;border:1px solid var(--rule);border-radius:8px;padding:14px;margin:10px 0}.blank-select{background:var(--panel2);border:1px solid var(--rule);border-radius:6px;color:var(--ink);padding:7px;font-family:var(--mono)}
+.topic-card{background:var(--panel);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px}.topic-card h3{font-family:var(--serif);font-size:1.18rem;margin:0 0 8px}.topic-card ul{margin:8px 0 0;padding-left:20px}.topic-card li{margin:4px 0;color:var(--ink-dim)}.pattern{display:inline-block;font-family:var(--mono);font-size:.82rem;background:var(--panel2);border-left:3px solid var(--accent);border-radius:6px;padding:7px 9px;margin:4px 4px 4px 0}.drill-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.drill-topic{font-family:var(--mono);font-size:.72rem;color:#0a1612;background:var(--accent2);border-radius:999px;padding:3px 8px;white-space:nowrap}
+.toeic-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}.toeic-tab{font-family:var(--mono);font-size:.78rem;background:var(--panel2);border:1px solid var(--rule);color:var(--ink-dim);border-radius:8px;padding:8px 11px;cursor:pointer}.toeic-tab.active{background:var(--accent);color:#0a1612;border-color:var(--accent);font-weight:700}.toeic-part{display:none}.toeic-part.active{display:block}.audio-text{display:none}.listen-card{border-left:3px solid var(--blue)}.speak-btn{background:var(--blue);border-color:var(--blue);color:#08111f;font-weight:700}.speak-btn:hover{color:#08111f;filter:brightness(1.08)}.toeic-score{margin-bottom:18px}.audio-controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.tense-card{background:var(--panel);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px}.tense-card h3{font-family:var(--serif);font-size:1.2rem;margin:0 0 8px}.time-line{position:relative;height:54px;background:var(--panel2);border:1px solid var(--rule);border-radius:8px;margin:10px 0 12px}.time-line:before{content:"";position:absolute;left:8%;right:8%;top:27px;height:2px;background:var(--ink-dim)}.dot{position:absolute;top:20px;width:14px;height:14px;border-radius:50%;background:var(--accent);transform:translateX(-50%)}.dot.past{left:25%}.dot.now{left:50%;background:var(--accent2)}.dot.future{left:75%;background:var(--blue)}.spanbar{position:absolute;top:22px;height:10px;border-radius:999px;background:rgba(94,234,212,.35);border:1px solid var(--accent)}.spanbar.present{left:35%;width:30%}.spanbar.past{left:18%;width:28%;background:rgba(249,163,65,.35);border-color:var(--accent2)}.spanbar.future{left:55%;width:28%;background:rgba(117,167,255,.35);border-color:var(--blue)}.time-label{position:absolute;bottom:4px;font-family:var(--mono);font-size:.65rem;color:var(--ink-dim);transform:translateX(-50%)}.tense-bank{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.tense-focus{border-color:var(--accent)}
+@media(max-width:1040px){.wide{grid-template-columns:1fr}.sidebar{position:fixed;left:-290px;z-index:50;transition:left .25s;box-shadow:0 0 40px #000a}.sidebar.open{left:0}.main{padding:74px 18px 100px}.menu-btn{display:flex!important}}@media(max-width:720px){.grid,.phrase,.tense-bank{grid-template-columns:1fr}.page-title{font-size:2rem}.score-banner{position:static;flex-direction:column;align-items:flex-start;gap:8px}.key-table{display:block;overflow-x:auto;white-space:nowrap}}
+</style>
+</head>
+<body>
+<button class="menu-btn" id="menuBtn">☰</button>
+<div class="shell">
+<nav class="sidebar" id="sidebar">
+  <div class="brand">English · TOEIC</div>
+  <div class="brand-sub">Objectif<br>600</div>
+  <div class="nav-group"><h4>Menu</h4>
+    <a class="nav-link active" data-page="plan"><span class="idx">①</span> Plan 600</a>
+    <a class="nav-link" data-page="base"><span class="idx">②</span> Bases</a>
+    <a class="nav-link" data-page="mega"><span class="idx">③</span> Méga grammaire</a>
+    <a class="nav-link" data-page="work"><span class="idx">④</span> Travail</a>
+    <a class="nav-link" data-page="phrases"><span class="idx">⑤</span> Phrases</a>
+    <a class="nav-link" data-page="drills"><span class="idx">⑥</span> Drills TOEIC</a>
+    <a class="nav-link" data-page="tenses"><span class="idx">⑦</span> Temps anglais</a>
+    <a class="nav-link" data-page="flash"><span class="idx">⑧</span> Flashcards</a>
+    <a class="nav-link" data-page="trous"><span class="idx">⑨</span> Exercices</a>
+    <a class="nav-link" data-page="quiz"><span class="idx">⑩</span> Quiz</a>
+    <a class="nav-link" data-page="toeic"><span class="idx">⑪</span> Mini TOEIC</a>
+  </div>
+  <div class="footer-note">But réaliste : sécuriser les questions faciles et moyennes pour viser 600.</div>
+</nav>
+<main class="main">
+
+<section class="page active" id="page-plan">
+  <h1 class="page-title"><span class="num">①</span> Objectif TOEIC 600</h1>
+  <p class="page-lede">Tu n'as pas besoin d'être bilingue. Pour viser 600, il faut reconnaître les phrases fréquentes, comprendre le vocabulaire du travail et éviter les grosses erreurs de grammaire.</p>
+  <div class="wide">
+    <div class="panel">
+      <span class="tag orange">Méthode douce</span>
+      <h3>Plan 30 jours, version réaliste</h3>
+      <label class="checkline"><input class="todo" type="checkbox"> Tous les jours : 15 mots de vocabulaire travail.</label>
+      <label class="checkline"><input class="todo" type="checkbox"> 10 min : flashcards anglais → français.</label>
+      <label class="checkline"><input class="todo" type="checkbox"> 10 min : phrases à trous.</label>
+      <label class="checkline"><input class="todo" type="checkbox"> 10 min : lecture d'un email court.</label>
+      <label class="checkline"><input class="todo" type="checkbox"> 5 min : répéter les phrases utiles à voix haute.</label>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <div class="small" id="todoText">0 / 5 habitudes cochées</div>
+      <div class="hint"><b>Règle anti-panique :</b> si tu ne comprends pas tout, cherche le sujet, le verbe, le temps et les mots business. Ça suffit souvent.</div>
+    </div>
+    <aside class="panel">
+      <h3>Ce qui rapporte vite</h3>
+      <div class="steps">
+        <div class="step">Présent simple : habitudes et faits.</div>
+        <div class="step">Passé simple : actions terminées.</div>
+        <div class="step">Futur : will / going to.</div>
+        <div class="step">Mots du travail : meeting, schedule, invoice, customer, deadline.</div>
+        <div class="step">Emails : request, confirm, attach, postpone, available.</div>
+      </div>
+      <div class="warning">Ne traduis pas mot à mot. Apprends des blocs : “I would like to”, “Could you please”, “The meeting has been postponed”.</div>
+    </aside>
+  </div>
+</section>
+
+<section class="page" id="page-base">
+  <h1 class="page-title"><span class="num">②</span> Règles de base</h1>
+  <p class="page-lede">Le minimum vital pour comprendre les phrases TOEIC sans se noyer.</p>
+  <div class="grid">
+    <article class="card"><span class="tag">Verbe être</span><h3>Be : am / is / are</h3><table class="key-table"><tr><th>Français</th><th>Anglais</th></tr><tr><td>Je suis disponible.</td><td>I am available.</td></tr><tr><td>Il est en réunion.</td><td>He is in a meeting.</td></tr><tr><td>Ils sont en retard.</td><td>They are late.</td></tr></table><div class="warning">On ne dit pas “I am agree”. On dit : <b>I agree</b>.</div></article>
+    <article class="card"><span class="tag">Présent</span><h3>Present simple</h3><p>Pour les habitudes, les vérités générales, les horaires.</p><div class="formula">I work / you work / he works / she works</div><p>Question : <b>Do you work?</b> / <b>Does she work?</b></p><p>Négation : <b>I do not work</b> / <b>He does not work</b>.</p></article>
+    <article class="card"><span class="tag">En cours</span><h3>Present continuous</h3><p>Pour une action en train de se passer maintenant ou une situation temporaire.</p><div class="formula">be + verbe-ing</div><p>She is working on the report. = Elle travaille sur le rapport.</p></article>
+    <article class="card"><span class="tag">Passé</span><h3>Past simple</h3><p>Pour une action terminée dans le passé.</p><div class="formula">regular: worked / called / received</div><p>Yesterday, we received the invoice. = Hier, nous avons reçu la facture.</p></article>
+    <article class="card"><span class="tag">Futur</span><h3>Will / going to</h3><p><b>Will</b> : décision, promesse, prédiction. <b>Going to</b> : intention ou plan déjà prévu.</p><div class="formula">I will call you tomorrow. / We are going to hire a new assistant.</div></article>
+    <article class="card"><span class="tag">Modaux</span><h3>Can, must, should</h3><table class="key-table"><tr><th>Mot</th><th>Sens</th><th>Exemple</th></tr><tr><td>can</td><td>pouvoir</td><td>Can you help me?</td></tr><tr><td>must</td><td>devoir fort</td><td>You must wear a badge.</td></tr><tr><td>should</td><td>devrait</td><td>You should check the file.</td></tr></table></article>
+    <article class="card"><span class="tag">Prépositions</span><h3>In, on, at</h3><table class="key-table"><tr><th>Mot</th><th>Usage</th><th>Exemple</th></tr><tr><td>in</td><td>mois, années, lieux fermés</td><td>in June, in 2026, in the office</td></tr><tr><td>on</td><td>jours, surfaces</td><td>on Monday, on the desk</td></tr><tr><td>at</td><td>heure, point précis</td><td>at 9 a.m., at reception</td></tr></table></article>
+    <article class="card"><span class="tag">Comparatif</span><h3>More / -er</h3><p>Short adjectives : <b>cheaper, faster, earlier</b>. Long adjectives : <b>more expensive, more convenient</b>.</p><div class="formula">This option is cheaper than the first one.</div></article>
+  </div>
+</section>
+
+<section class="page" id="page-mega">
+  <h1 class="page-title"><span class="num">③</span> Méga grammaire TOEIC</h1>
+  <p class="page-lede">Tous les sujets que tu as ajoutés, expliqués simplement. Lis la règle, regarde le modèle, puis fais les drills.</p>
+  <div class="grid">
+    <article class="topic-card"><span class="tag">1</span><h3>Comparatifs et superlatifs</h3><p>Comparer deux choses : <b>cheaper than</b>, <b>more expensive than</b>. Dire “le plus” : <b>the cheapest</b>, <b>the most convenient</b>.</p><span class="pattern">short adjective + er than</span><span class="pattern">more + long adjective + than</span><span class="pattern">the most + adjective</span><p class="small">TOEIC : prices, hotels, delivery options.</p></article>
+    <article class="topic-card"><span class="tag">2</span><h3>Conditionnels</h3><p>Pour parler d'une condition : if. Le TOEIC adore les règles, horaires et conséquences.</p><span class="pattern">If + present, will + verb</span><span class="pattern">If + past, would + verb</span><p>If the package arrives today, we will call you.</p></article>
+    <article class="topic-card"><span class="tag">3</span><h3>Gérondifs et infinitifs</h3><p>Après certains verbes, on met <b>-ing</b>. Après d'autres, on met <b>to + verb</b>.</p><span class="pattern">enjoy + ing</span><span class="pattern">avoid + ing</span><span class="pattern">decide + to</span><span class="pattern">want + to</span><p>She decided to apply. / He avoids working late.</p></article>
+    <article class="topic-card"><span class="tag">4</span><h3>Mots de liaison</h3><p>Ils relient les idées. Très utile en reading.</p><table class="key-table"><tr><th>Mot</th><th>Sens</th></tr><tr><td>however</td><td>cependant</td></tr><tr><td>therefore</td><td>donc</td></tr><tr><td>although</td><td>bien que</td></tr><tr><td>because</td><td>parce que</td></tr><tr><td>in addition</td><td>en plus</td></tr></table></article>
+    <article class="topic-card"><span class="tag">5</span><h3>Noms</h3><p>Un nom peut être singulier/pluriel, comptable/incomptable.</p><span class="pattern">one employee / two employees</span><span class="pattern">information = jamais informations</span><span class="pattern">advice = uncountable</span><p class="small">Piège : information, equipment, luggage ne prennent pas -s.</p></article>
+    <article class="topic-card"><span class="tag">6</span><h3>Noms / verbes / adjectifs + prépositions</h3><p>Certains mots viennent avec une préposition fixe. Il faut les apprendre en bloc.</p><span class="pattern">responsible for</span><span class="pattern">interested in</span><span class="pattern">apply for</span><span class="pattern">depend on</span><span class="pattern">in charge of</span></article>
+    <article class="topic-card"><span class="tag">7</span><h3>Passif vs actif + causatif</h3><p>Passif : l'objet subit l'action. Causatif : faire faire quelque chose.</p><span class="pattern">be + past participle</span><span class="pattern">The report was sent.</span><span class="pattern">have something done</span><p>We had the printer repaired. = On a fait réparer l'imprimante.</p></article>
+    <article class="topic-card"><span class="tag">8</span><h3>Verbes à particules</h3><p>Verbe + petit mot = nouveau sens.</p><table class="key-table"><tr><th>Phrasal verb</th><th>Sens</th></tr><tr><td>set up</td><td>installer / organiser</td></tr><tr><td>fill out</td><td>remplir</td></tr><tr><td>turn down</td><td>refuser / baisser</td></tr><tr><td>pick up</td><td>récupérer</td></tr><tr><td>look over</td><td>examiner</td></tr></table></article>
+    <article class="topic-card"><span class="tag">9</span><h3>Temps du présent</h3><p>Présent simple = habitude/fait. Présent continu = maintenant/temporaire. Present perfect = lien passé-présent.</p><span class="pattern">She works here.</span><span class="pattern">She is working now.</span><span class="pattern">She has worked here since 2024.</span></article>
+    <article class="topic-card"><span class="tag">10</span><h3>Expressions courantes et mots pièges</h3><p>Le TOEIC adore les mots proches.</p><table class="key-table"><tr><th>Piège</th><th>Différence</th></tr><tr><td>currently / actually</td><td>currently = actuellement ; actually = en fait</td></tr><tr><td>attend / assist</td><td>attend = assister à ; assist = aider</td></tr><tr><td>eventually</td><td>finalement / à terme, pas éventuellement</td></tr><tr><td>resume</td><td>CV ou reprendre</td></tr></table></article>
+    <article class="topic-card"><span class="tag">11</span><h3>Verbes modaux</h3><p>Ils expriment possibilité, obligation, conseil.</p><span class="pattern">can = pouvoir</span><span class="pattern">must = obligation forte</span><span class="pattern">should = conseil</span><span class="pattern">may/might = possibilité</span><span class="pattern">would = conditionnel / politesse</span></article>
+    <article class="topic-card"><span class="tag">12</span><h3>Question tags</h3><p>Petite question à la fin d'une phrase : “n'est-ce pas ?”.</p><span class="pattern">You are available, aren't you?</span><span class="pattern">She doesn't work here, does she?</span><p>Phrase positive → tag négatif. Phrase négative → tag positif.</p></article>
+    <article class="topic-card"><span class="tag">13</span><h3>Nature des mots</h3><p>Dans les exercices TOEIC, il faut souvent choisir entre nom, verbe, adjectif, adverbe.</p><span class="pattern">quick = adjectif</span><span class="pattern">quickly = adverbe</span><span class="pattern">decision = nom</span><span class="pattern">decide = verbe</span></article>
+    <article class="topic-card"><span class="tag">14</span><h3>Temps du passé</h3><p>Past simple = action terminée. Past continuous = action en cours dans le passé. Past perfect = avant un autre passé.</p><span class="pattern">I called yesterday.</span><span class="pattern">I was calling when he arrived.</span><span class="pattern">I had left before she called.</span></article>
+    <article class="topic-card"><span class="tag">15</span><h3>Pronoms et adjectifs</h3><p>Attention à la place et au rôle.</p><table class="key-table"><tr><th>Type</th><th>Exemple</th></tr><tr><td>sujet</td><td>I, you, he, she, we, they</td></tr><tr><td>objet</td><td>me, him, her, us, them</td></tr><tr><td>possessif</td><td>my, your, his, her, our, their</td></tr><tr><td>pronom possessif</td><td>mine, yours, his, hers, ours, theirs</td></tr></table></article>
+    <article class="topic-card"><span class="tag">16</span><h3>Le futur</h3><p>Plusieurs façons de parler du futur.</p><span class="pattern">will = décision / prédiction</span><span class="pattern">going to = plan / intention</span><span class="pattern">present continuous = arrangement</span><p>We are meeting the client tomorrow.</p></article>
+  </div>
+</section>
+
+<section class="page" id="page-work">
+  <h1 class="page-title"><span class="num">③</span> Vocabulaire du travail</h1>
+  <p class="page-lede">Le TOEIC adore le monde professionnel : bureau, réunions, clients, factures, voyages, recrutement.</p>
+  <div class="chiprow" id="vocabChips"></div>
+  <div class="grid" id="vocabGrid"></div>
+</section>
+
+<section class="page" id="page-phrases">
+  <h1 class="page-title"><span class="num">④</span> Phrases prêtes à reconnaître</h1>
+  <p class="page-lede">Apprends ces blocs. Ils reviennent tout le temps dans les emails, annonces et conversations TOEIC.</p>
+  <div class="grid">
+    <article class="card"><span class="tag">Email</span><h3>Demander poliment</h3><div class="phrase"><b>Could you please send me the report?</b><span>Pourriez-vous m'envoyer le rapport ?</span></div><div class="phrase"><b>I would like to confirm our appointment.</b><span>Je voudrais confirmer notre rendez-vous.</span></div><div class="phrase"><b>Please find attached the invoice.</b><span>Veuillez trouver la facture en pièce jointe.</span></div></article>
+    <article class="card"><span class="tag">Réunion</span><h3>Meeting</h3><div class="phrase"><b>The meeting has been postponed.</b><span>La réunion a été reportée.</span></div><div class="phrase"><b>She is giving a presentation.</b><span>Elle fait une présentation.</span></div><div class="phrase"><b>We need to discuss the budget.</b><span>Nous devons discuter du budget.</span></div></article>
+    <article class="card"><span class="tag">Client</span><h3>Customer service</h3><div class="phrase"><b>The customer requested a refund.</b><span>Le client a demandé un remboursement.</span></div><div class="phrase"><b>Your order will be delivered tomorrow.</b><span>Votre commande sera livrée demain.</span></div><div class="phrase"><b>We apologize for the inconvenience.</b><span>Nous nous excusons pour la gêne occasionnée.</span></div></article>
+    <article class="card"><span class="tag">Voyage</span><h3>Business travel</h3><div class="phrase"><b>The flight was delayed.</b><span>Le vol a été retardé.</span></div><div class="phrase"><b>I booked a room for two nights.</b><span>J'ai réservé une chambre pour deux nuits.</span></div><div class="phrase"><b>The conference will take place downtown.</b><span>La conférence aura lieu en centre-ville.</span></div></article>
+  </div>
+</section>
+
+<section class="page" id="page-drills">
+  <h1 class="page-title"><span class="num">⑥</span> Drills TOEIC par thème</h1>
+  <p class="page-lede">Choisis un thème, réponds, lis l'explication. C'est la partie qui fait vraiment progresser.</p>
+  <div class="chiprow" id="drillChips"></div>
+  <div class="score-banner"><span>Score thème</span><span class="score" id="drillScore">0 / 0</span></div>
+  <div class="grid" id="drillBox"></div>
+</section>
+
+<section class="page" id="page-tenses">
+  <h1 class="page-title"><span class="num">⑦</span> Sessions complètes sur les temps</h1>
+  <p class="page-lede">Si tu es perdue dans les temps, commence ici. On apprend à choisir avec des mots indices : every day, now, yesterday, since, tomorrow.</p>
+  <div class="wide">
+    <div class="panel">
+      <span class="tag orange">Diagnostic</span>
+      <h3>Comment choisir vite ?</h3>
+      <div class="steps">
+        <div class="step">Il y a <b>every day / usually / often</b> ? Présent simple.</div>
+        <div class="step">Il y a <b>now / currently / at the moment</b> ? Présent continu.</div>
+        <div class="step">Il y a <b>yesterday / last / ago</b> ? Past simple.</div>
+        <div class="step">Il y a <b>when + past</b> et une action en cours ? Past continuous.</div>
+        <div class="step">Il y a <b>since / for / already / yet</b> ? Present perfect.</div>
+        <div class="step">Il y a <b>tomorrow / next / soon</b> ? Futur.</div>
+      </div>
+      <div class="hint"><b>Phrase magique :</b> trouve d'abord le temps dans la phrase, puis choisis la forme du verbe. Ne commence pas par traduire mot à mot.</div>
+    </div>
+    <aside class="panel">
+      <h3>Timeline mentale</h3>
+      <div class="time-line"><span class="dot past"></span><span class="dot now"></span><span class="dot future"></span><span class="time-label" style="left:25%">past</span><span class="time-label" style="left:50%">now</span><span class="time-label" style="left:75%">future</span></div>
+      <p class="small">Le TOEIC te donne souvent un indice de temps. Ton travail : le repérer avant de choisir la réponse.</p>
+      <div class="warning">Piège : en français “je travaille ici depuis 2023” est au présent. En anglais : <b>I have worked here since 2023</b>.</div>
+    </aside>
+  </div>
+  <div class="tense-bank">
+    <article class="tense-card"><span class="tag">Present simple</span><h3>Habitudes et faits</h3><div class="time-line"><span class="spanbar present"></span><span class="dot now"></span><span class="time-label" style="left:50%">habit</span></div><p><b>Forme :</b> I work / she works. Question : do/does.</p><p><b>Indices :</b> usually, often, every day, always.</p><div class="formula">She works in accounting.</div></article>
+    <article class="tense-card"><span class="tag">Present continuous</span><h3>Maintenant / temporaire</h3><div class="time-line"><span class="spanbar present"></span><span class="dot now"></span><span class="time-label" style="left:50%">now</span></div><p><b>Forme :</b> am/is/are + verb-ing.</p><p><b>Indices :</b> now, currently, at the moment, this week.</p><div class="formula">They are updating the website.</div></article>
+    <article class="tense-card"><span class="tag">Past simple</span><h3>Action terminée</h3><div class="time-line"><span class="dot past"></span><span class="dot now"></span><span class="time-label" style="left:25%">finished</span></div><p><b>Forme :</b> worked / went / received.</p><p><b>Indices :</b> yesterday, last week, in 2022, ago.</p><div class="formula">We received the invoice yesterday.</div></article>
+    <article class="tense-card"><span class="tag">Past continuous</span><h3>Action en cours dans le passé</h3><div class="time-line"><span class="spanbar past"></span><span class="dot past"></span><span class="time-label" style="left:32%">was doing</span></div><p><b>Forme :</b> was/were + verb-ing.</p><p><b>Usage :</b> action en cours interrompue par une autre.</p><div class="formula">I was preparing the report when he called.</div></article>
+    <article class="tense-card"><span class="tag">Present perfect</span><h3>Passé lié au présent</h3><div class="time-line"><span class="spanbar present"></span><span class="dot now"></span><span class="time-label" style="left:50%">result now</span></div><p><b>Forme :</b> have/has + participe passé.</p><p><b>Indices :</b> since, for, already, yet, just.</p><div class="formula">She has worked here since 2023.</div></article>
+    <article class="tense-card"><span class="tag">Past perfect</span><h3>Avant un autre passé</h3><div class="time-line"><span class="dot past" style="left:20%"></span><span class="dot past" style="left:38%;background:var(--accent2)"></span><span class="time-label" style="left:20%">before</span><span class="time-label" style="left:38%">past</span></div><p><b>Forme :</b> had + participe passé.</p><p><b>Usage :</b> une action était déjà terminée avant une autre action passée.</p><div class="formula">They had left before the meeting started.</div></article>
+    <article class="tense-card"><span class="tag">Future will</span><h3>Promesse / décision / prédiction</h3><div class="time-line"><span class="dot now"></span><span class="dot future"></span><span class="time-label" style="left:75%">future</span></div><p><b>Forme :</b> will + verbe.</p><p><b>Indices :</b> tomorrow, soon, next week.</p><div class="formula">I will send the file tomorrow.</div></article>
+    <article class="tense-card"><span class="tag">Going to</span><h3>Plan / intention</h3><div class="time-line"><span class="dot now"></span><span class="spanbar future"></span><span class="time-label" style="left:68%">planned</span></div><p><b>Forme :</b> am/is/are going to + verbe.</p><p><b>Usage :</b> décision déjà prévue.</p><div class="formula">We are going to hire a new assistant.</div></article>
+  </div>
+  <div class="grid">
+    <article class="panel"><span class="tag blue">Flashcards temps</span><h3>Cartes spécialisées</h3><div class="chiprow" id="tenseFlashChips"></div><div class="grid" id="tenseFlashBox"></div></article>
+    <article class="panel"><span class="tag orange">Exercices temps</span><h3>Drills spécialisés</h3><div class="chiprow" id="tenseDrillChips"></div><div class="score-banner"><span>Score temps</span><span class="score" id="tenseScore">0 / 0</span></div><div id="tenseDrillBox"></div></article>
+  </div>
+</section>
+
+<section class="page" id="page-flash">
+  <h1 class="page-title"><span class="num">⑤</span> Flashcards</h1>
+  <p class="page-lede">Clique une carte pour voir la traduction et une phrase TOEIC. Choisis une catégorie si tu veux travailler ciblé.</p>
+  <div class="chiprow" id="flashChips"></div>
+  <div class="grid" id="flashBox"></div>
+</section>
+
+<section class="page" id="page-trous">
+  <h1 class="page-title"><span class="num">⑥</span> Exercices à trous</h1>
+  <p class="page-lede">Des phrases très TOEIC. Le but : reconnaître le temps, la préposition ou le mot business.</p>
+  <div class="grid" id="fills"></div>
+  <div class="btn-row"><button class="btn primary" id="checkFills">Corriger</button><button class="btn" id="resetFills">Reset</button></div>
+</section>
+
+<section class="page" id="page-quiz">
+  <h1 class="page-title"><span class="num">⑦</span> Quiz TOEIC 600</h1>
+  <p class="page-lede">Questions courtes pour sécuriser les points faciles.</p>
+  <div class="score-banner"><span>Score</span><span class="score" id="score">0 / 20</span></div>
+  <div class="grid" id="quizBox"></div>
+</section>
+
+<section class="page" id="page-toeic">
+  <h1 class="page-title"><span class="num">⑧</span> Mini TOEIC</h1>
+  <p class="page-lede">Version agrandie : listening avec audio généré par le navigateur, reading, emails et petites annonces. Clique sur “Écouter”, puis réponds.</p>
+  <div class="toeic-tabs">
+    <button class="toeic-tab active" data-toeic="listen">Listening</button>
+    <button class="toeic-tab" data-toeic="reading">Reading</button>
+    <button class="toeic-tab" data-toeic="mixed">Mix TOEIC</button>
+  </div>
+  <div class="score-banner toeic-score"><span>Score Mini TOEIC</span><span class="score" id="miniScore">0 / 0</span></div>
+  <section class="toeic-part active" id="toeic-listen">
+    <div class="grid" id="listenBox"></div>
+  </section>
+  <section class="toeic-part" id="toeic-reading">
+    <div class="grid" id="readingBox"></div>
+  </section>
+  <section class="toeic-part" id="toeic-mixed">
+    <div class="grid" id="miniBox"></div>
+  </section>
+</section>
+
+</main>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const navLinks=document.querySelectorAll('.nav-link[data-page]'),pages=document.querySelectorAll('.page');
+navLinks.forEach(link=>link.addEventListener('click',()=>{navLinks.forEach(l=>l.classList.remove('active'));link.classList.add('active');pages.forEach(p=>p.classList.remove('active'));$('page-'+link.dataset.page).classList.add('active');$('sidebar').classList.remove('open');window.scrollTo(0,0)}));
+$('menuBtn').addEventListener('click',()=>$('sidebar').classList.toggle('open'));
+document.querySelectorAll('.todo').forEach(c=>c.addEventListener('change',()=>{const all=[...document.querySelectorAll('.todo')],done=all.filter(x=>x.checked).length;$('bar').style.width=(done/all.length*100)+'%';$('todoText').textContent=done+' / '+all.length+' habitudes cochées'}));
+const vocab={
+office:[['desk','bureau','The documents are on the desk.'],['appointment','rendez-vous','I have an appointment at 10.'],['schedule','planning','The schedule has changed.'],['deadline','date limite','The deadline is Friday.'],['staff','personnel','The staff meeting starts soon.'],['manager','responsable','The manager approved the request.']],
+email:[['attach','joindre','I attached the file.'],['confirm','confirmer','Please confirm your attendance.'],['request','demande / demander','The client requested more information.'],['reply','répondre','She replied to the email.'],['forward','transférer','Could you forward the message?'],['regarding','concernant','I am writing regarding your order.']],
+meeting:[['postpone','reporter','The meeting was postponed.'],['attend','assister à','I will attend the conference.'],['agenda','ordre du jour','The agenda is attached.'],['presentation','présentation','He is giving a presentation.'],['discuss','discuter','We need to discuss the budget.'],['minutes','compte rendu','She wrote the meeting minutes.']],
+customer:[['customer','client','The customer needs assistance.'],['refund','remboursement','He requested a refund.'],['complaint','réclamation','We received a complaint.'],['delivery','livraison','The delivery is late.'],['order','commande','Your order has shipped.'],['available','disponible','This item is available online.']],
+finance:[['invoice','facture','The invoice is due today.'],['budget','budget','The budget was reduced.'],['fee','frais','There is a small service fee.'],['payment','paiement','Payment is required in advance.'],['discount','réduction','They offered a discount.'],['receipt','reçu','Keep your receipt.']],
+travel:[['flight','vol','The flight was delayed.'],['luggage','bagages','Her luggage is missing.'],['reservation','réservation','I made a reservation.'],['downtown','centre-ville','The hotel is downtown.'],['boarding pass','carte d’embarquement','Print your boarding pass.'],['itinerary','itinéraire','The itinerary was updated.']]
+};
+const labels={office:'Bureau',email:'Emails',meeting:'Réunions',customer:'Clients',finance:'Finance',travel:'Voyage'};
+function renderChips(target,handler){const box=$(target);box.innerHTML='';Object.keys(vocab).forEach((k,i)=>{const b=document.createElement('button');b.className='chip'+(i===0?' active':'');b.textContent=labels[k];b.dataset.cat=k;b.addEventListener('click',()=>{box.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');handler(k)});box.appendChild(b)})}
+function renderVocab(cat='office'){const box=$('vocabGrid');box.innerHTML='';vocab[cat].forEach(([en,fr,ex])=>{const c=document.createElement('article');c.className='card';c.innerHTML='<span class="tag">'+labels[cat]+'</span><h3>'+en+'</h3><p><b>Français :</b> '+fr+'</p><div class="formula">'+ex+'</div>';box.appendChild(c)})}
+function renderFlash(cat='office'){const box=$('flashBox');box.innerHTML='';vocab[cat].forEach(([en,fr,ex])=>{const c=document.createElement('article');c.className='flashcard flip';c.innerHTML='<div class="front"><span class="tag orange">English</span><div class="word">'+en+'</div><p class="small">Clique pour voir.</p></div><div class="back"><span class="tag">Français</span><div class="word">'+fr+'</div><p>'+ex+'</p></div>';c.addEventListener('click',()=>c.classList.toggle('flipped'));box.appendChild(c)})}
+renderChips('vocabChips',renderVocab);renderVocab();renderChips('flashChips',renderFlash);renderFlash();
+const drillTopics={comparatives:'Comparatifs',conditionals:'Conditionnels',gerund:'Gérondif/infinitif',linking:'Mots de liaison',nouns:'Noms',prep:'Prépositions',passive:'Passif/causatif',phrasal:'Phrasal verbs',present:'Présent',traps:'Mots pièges',modals:'Modaux',tags:'Question tags',wordform:'Nature des mots',past:'Passé',pronouns:'Pronoms',future:'Futur'};
+const drills=[
+['comparatives','This printer is ____ than the old one.',['efficient','more efficient','most efficient'],1,'Comparatif avec adjectif long : more efficient than.'],
+['comparatives','The express service is the ____ option.',['fast','faster','fastest'],2,'Superlatif : the fastest.'],
+['comparatives','This hotel is ____ expensive than the one downtown.',['less','least','little'],0,'Less expensive than = moins cher que.'],
+['conditionals','If the client calls, I ____ you immediately.',['notify','will notify','notified'],1,'If + présent, will + verbe.'],
+['conditionals','If I had more time, I ____ the report again.',['review','would review','will reviewed'],1,'Conditionnel imaginaire : would + verbe.'],
+['conditionals','Unless we leave now, we ____ late.',['are','will be','were'],1,'Unless = if not. Futur avec will.'],
+['gerund','She enjoys ____ with international clients.',['work','working','to work'],1,'Enjoy + verbe-ing.'],
+['gerund','They decided ____ the contract.',['sign','signing','to sign'],2,'Decide + to + verbe.'],
+['gerund','Please avoid ____ personal calls at work.',['make','making','to make'],1,'Avoid + verbe-ing.'],
+['linking','The price is high. ____, the quality is excellent.',['However','Because','Therefore'],0,'However = cependant, opposition.'],
+['linking','The train was canceled; ____, we took a taxi.',['therefore','although','despite'],0,'Therefore = donc.'],
+['linking','____ it was raining, the event continued.',['Although','Because of','In addition'],0,'Although + sujet + verbe.'],
+['nouns','We need more ____ about the schedule.',['informations','information','inform'],1,'Information est indénombrable en anglais.'],
+['nouns','All ____ must wear a badge.',['employee','employees','employment'],1,'All + nom pluriel.'],
+['nouns','The new ____ arrived yesterday.',['equipment','equipments','equip'],0,'Equipment est indénombrable.'],
+['prep','She is responsible ____ customer service.',['of','for','to'],1,'Responsible for.'],
+['prep','He applied ____ a position in sales.',['for','to','at'],0,'Apply for a job/position.'],
+['prep','This depends ____ the budget.',['of','on','in'],1,'Depend on.'],
+['passive','The invoice ____ sent yesterday.',['is','was','has'],1,'Passif au passé : was sent.'],
+['passive','The office ____ cleaned every evening.',['is','are','does'],0,'Passif présent : is cleaned.'],
+['passive','We had the computer ____.',['repair','repaired','repairing'],1,'Causatif : have something done.'],
+['phrasal','Please ____ this form before Friday.',['fill out','turn down','pick up'],0,'Fill out = remplir.'],
+['phrasal','She ____ the offer because the salary was too low.',['set up','turned down','looked over'],1,'Turn down = refuser.'],
+['phrasal','Can you ____ the package at reception?',['pick up','give up','break down'],0,'Pick up = récupérer.'],
+['present','He ____ invoices every Monday.',['process','processes','is process'],1,'Présent simple avec he : -es.'],
+['present','They ____ a new website this week.',['launch','are launching','launched'],1,'This week = action temporaire en cours.'],
+['present','She ____ here since 2023.',['works','is working','has worked'],2,'Since + point de départ : present perfect.'],
+['traps','I ____ agree with the manager.',['am','do',''],2,'On dit I agree, pas I am agree.'],
+['traps','She will ____ the conference tomorrow.',['assist','attend','attending'],1,'Attend = assister à un événement. Assist = aider.'],
+['traps','____, we are hiring two interns.',['Actually','Currently','Eventually'],1,'Currently = actuellement. Actually = en fait.'],
+['modals','You ____ submit the form by Friday. It is required.',['can','must','might'],1,'Must = obligation forte.'],
+['modals','You ____ check the address before sending it.',['should','may','would'],0,'Should = conseil.'],
+['modals','The package ____ arrive tomorrow, but I am not sure.',['must','might','should not'],1,'Might = possibilité incertaine.'],
+['tags','You are available tomorrow, ____?',['are you','aren’t you','do you'],1,'Phrase positive avec be -> tag négatif.'],
+['tags','She doesn’t work here, ____?',['does she','doesn’t she','is she'],0,'Phrase négative -> tag positif.'],
+['tags','They sent the email, ____?',['did they','didn’t they','weren’t they'],1,'Past simple positif -> didn’t they.'],
+['wordform','The team worked very ____.',['quick','quickly','quicker'],1,'Après un verbe, il faut souvent un adverbe.'],
+['wordform','We need a final ____ by Monday.',['decide','decision','decisive'],1,'A final + nom.'],
+['wordform','The new software is very ____.',['use','useful','usefully'],1,'After be, adjective.'],
+['past','She ____ the client yesterday.',['calls','called','has called'],1,'Yesterday -> past simple.'],
+['past','I ____ when the manager arrived.',['was working','worked','have worked'],0,'Action en cours dans le passé.'],
+['past','They ____ the documents before the meeting started.',['sent','had sent','send'],1,'Avant un autre passé : past perfect.'],
+['pronouns','Mr. Lee asked ____ to prepare the slides.',['I','me','my'],1,'Après un verbe, pronom objet.'],
+['pronouns','This is ____ laptop.',['she','her','hers'],1,'Her + nom.'],
+['pronouns','The red folder is ____.',['my','mine','me'],1,'Mine = le mien, sans nom après.'],
+['future','I ____ call you as soon as I arrive.',['will','am','going'],0,'Will + verbe.'],
+['future','We are ____ to launch the product next month.',['will','going','go'],1,'Going to + verbe.'],
+['future','She is meeting the supplier tomorrow. This is a ____.',['past action','future arrangement','general habit'],1,'Present continuous peut exprimer un arrangement futur.']
+];
+let currentDrill='comparatives',drillScore=0,drillAnswered=0;
+function renderDrillChips(){const box=$('drillChips');box.innerHTML='';Object.entries(drillTopics).forEach(([k,label],i)=>{const b=document.createElement('button');b.className='chip'+(i===0?' active':'');b.textContent=label;b.addEventListener('click',()=>{box.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');currentDrill=k;renderDrills(k)});box.appendChild(b)})}
+function renderDrills(topic=currentDrill){drillScore=0;drillAnswered=0;const data=drills.filter(d=>d[0]===topic);$('drillScore').textContent='0 / '+data.length;const box=$('drillBox');box.innerHTML='';data.forEach((q,i)=>{const card=document.createElement('article');card.className='quiz-card';card.innerHTML='<div class="drill-head"><h3>'+(i+1)+'. '+q[1]+'</h3><span class="drill-topic">'+drillTopics[q[0]]+'</span></div><div class="opts"></div><div class="explain">'+q[4]+'</div>';const opts=card.querySelector('.opts');q[2].forEach((op,j)=>{const d=document.createElement('div');d.className='option';d.textContent=op||'(rien)';d.addEventListener('click',()=>{if(card.classList.contains('revealed'))return;card.classList.add('revealed');drillAnswered++;if(j===q[3]){drillScore++;d.classList.add('correct')}else{d.classList.add('incorrect');opts.children[q[3]].classList.add('correct')}$('drillScore').textContent=drillScore+' / '+data.length});opts.appendChild(d)});box.appendChild(card)})}
+renderDrillChips();renderDrills();
+const tenseLabels={ps:'Présent simple',pc:'Présent continu',past:'Past simple',pastc:'Past continuous',pp:'Present perfect',pastp:'Past perfect',will:'Future will',going:'Going to',mix:'Mix diagnostic'};
+const tenseFlash={
+ps:[['Quand utiliser le présent simple ?','Habitudes, routines, faits généraux, horaires. Exemple : She works every day.'],['Forme avec he/she/it ?','On ajoute souvent -s : he works, she manages, it costs.'],['Question au présent simple ?','Do you work here? / Does she work here?']],
+pc:[['Quand utiliser le présent continu ?','Action maintenant ou temporaire : They are working now.'],['Forme ?','am/is/are + verbe-ing.'],['Indice typique ?','now, currently, at the moment, this week.']],
+past:[['Quand utiliser past simple ?','Action terminée dans le passé : yesterday, last week, ago.'],['Forme régulière ?','verb + ed : worked, called, received.'],['Question au passé ?','Did you call the client?']],
+pastc:[['Quand utiliser past continuous ?','Action en cours dans le passé : I was working when he called.'],['Forme ?','was/were + verbe-ing.'],['Différence avec past simple ?','Past continuous = décor/action en cours ; past simple = action ponctuelle.']],
+pp:[['Quand utiliser present perfect ?','Passé lié au présent : expérience, résultat, durée avec since/for.'],['Forme ?','have/has + participe passé.'],['Since ou for ?','Since + point de départ. For + durée.']],
+pastp:[['Quand utiliser past perfect ?','Action avant une autre action passée.'],['Forme ?','had + participe passé.'],['Exemple TOEIC','The meeting had started before I arrived.']],
+will:[['Quand utiliser will ?','Décision, promesse, prédiction : I will send it today.'],['Forme ?','will + base verb. Pas de -s.'],['Négation ?','will not = won’t.']],
+going:[['Quand utiliser going to ?','Plan ou intention déjà prévue : We are going to launch a product.'],['Forme ?','am/is/are going to + verb.'],['Différence avec will ?','Going to = plan. Will = décision/prediction souvent spontanée.']]
+};
+const tenseDrills=[
+['ps','She ____ invoices every Friday.',['process','processes','is processing'],1,'Every Friday = routine. He/she + s.'],
+['ps','____ the office open at 9?',['Do','Does','Is'],1,'Question présent simple avec it/the office : does.'],
+['ps','The train ____ at 8:15 every morning.',['leave','leaves','is leaving'],1,'Horaire = présent simple.'],
+['pc','They ____ the conference room right now.',['clean','are cleaning','cleaned'],1,'Right now = présent continu.'],
+['pc','I ____ on a new project this week.',['work','am working','worked'],1,'This week = situation temporaire.'],
+['pc','The manager ____ with a client at the moment.',['speaks','is speaking','spoke'],1,'At the moment = présent continu.'],
+['past','We ____ the report yesterday.',['finish','finished','have finished'],1,'Yesterday = past simple.'],
+['past','Did she ____ the email?',['sent','send','sends'],1,'Did + base verb.'],
+['past','They ____ the office last month.',['moved','move','have moved'],0,'Last month = past simple.'],
+['pastc','I ____ lunch when the client called.',['had','was having','have had'],1,'Action en cours interrompue.'],
+['pastc','They ____ the system when it crashed.',['tested','were testing','have tested'],1,'Action en cours dans le passé.'],
+['pastc','She was preparing the slides when he ____.',['arrived','was arriving','has arrived'],0,'Action ponctuelle qui interrompt = past simple.'],
+['pp','She ____ here since 2023.',['works','worked','has worked'],2,'Since + point de départ = present perfect.'],
+['pp','We have waited ____ two hours.',['since','for','during'],1,'For + durée.'],
+['pp','The package ____ arrived. It is on your desk.',['has','was','did'],0,'Résultat présent : has arrived.'],
+['pastp','The train ____ before we reached the station.',['left','had left','has left'],1,'Avant une autre action passée = past perfect.'],
+['pastp','She realized she ____ the attachment.',['forgot','had forgotten','has forgotten'],1,'Elle avait oublié avant de réaliser.'],
+['pastp','By the time the meeting started, everyone ____.',['arrived','had arrived','has arrived'],1,'By the time + past -> past perfect pour avant.'],
+['will','I ____ call you after the meeting.',['will','am going','was'],0,'Will + base verb.'],
+['will','The office ____ be closed tomorrow.',['will','is','has'],0,'Prédiction/information future.'],
+['will','Don’t worry, I ____ send the file.',['will','was','have'],0,'Promesse/décision.'],
+['going','We are ____ to hire two interns.',['go','going','will'],1,'Be going to + verb.'],
+['going','She is going to ____ the supplier.',['calls','call','called'],1,'Going to + base verb.'],
+['going','They ____ going to open a new branch.',['is','are','will'],1,'They are going to.'],
+['mix','Every Monday, he ____ the sales report.',['checks','is checking','checked'],0,'Every Monday = présent simple.'],
+['mix','Look! The technician ____ the printer.',['repairs','is repairing','repaired'],1,'Look! = maintenant.'],
+['mix','Last year, the company ____ 20 employees.',['hires','hired','has hired'],1,'Last year = past simple.'],
+['mix','I ____ this software before.',['use','used','have used'],2,'Before sans date précise, expérience = present perfect.'],
+['mix','Tomorrow, we ____ the client.',['met','will meet','have met'],1,'Tomorrow = futur.'],
+['mix','When I arrived, they ____ already left.',['have','had','were'],1,'Already before past action = had left.']
+];
+let activeTense='ps',tenseScore=0;
+function renderTenseChips(target,handler,includeMix=false){const keys=includeMix?Object.keys(tenseLabels):Object.keys(tenseFlash);const box=$(target);box.innerHTML='';keys.forEach((k,i)=>{const b=document.createElement('button');b.className='chip'+(i===0?' active':'');b.textContent=tenseLabels[k];b.addEventListener('click',()=>{box.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');handler(k)});box.appendChild(b)})}
+function renderTenseFlash(k='ps'){const box=$('tenseFlashBox');box.innerHTML='';tenseFlash[k].forEach(([q,a])=>{const c=document.createElement('article');c.className='flashcard flip tense-focus';c.innerHTML='<div class="front"><span class="tag orange">'+tenseLabels[k]+'</span><div class="word">'+q+'</div><p class="small">Clique pour retourner.</p></div><div class="back"><span class="tag">Réponse</span><p>'+a+'</p></div>';c.addEventListener('click',()=>c.classList.toggle('flipped'));box.appendChild(c)})}
+function renderTenseDrills(k='ps'){activeTense=k;tenseScore=0;const data=tenseDrills.filter(d=>d[0]===k);$('tenseScore').textContent='0 / '+data.length;const box=$('tenseDrillBox');box.innerHTML='';data.forEach((q,i)=>{const card=document.createElement('article');card.className='quiz-card';card.innerHTML='<div class="drill-head"><h3>'+(i+1)+'. '+q[1]+'</h3><span class="drill-topic">'+tenseLabels[q[0]]+'</span></div><div class="opts"></div><div class="explain">'+q[4]+'</div>';const opts=card.querySelector('.opts');q[2].forEach((op,j)=>{const d=document.createElement('div');d.className='option';d.textContent=op;d.addEventListener('click',()=>{if(card.classList.contains('revealed'))return;card.classList.add('revealed');if(j===q[3]){tenseScore++;d.classList.add('correct')}else{d.classList.add('incorrect');opts.children[q[3]].classList.add('correct')}$('tenseScore').textContent=tenseScore+' / '+data.length});opts.appendChild(d)});box.appendChild(card)})}
+renderTenseChips('tenseFlashChips',renderTenseFlash);renderTenseFlash();renderTenseChips('tenseDrillChips',renderTenseDrills,true);renderTenseDrills();
+const fills=[
+['She ____ in the marketing department.','works','Present simple : she/he/it + s.'],
+['The meeting has been ____ to Friday.','postponed','Postpone = reporter.'],
+['Please find ____ the report.','attached','Formule email classique.'],
+['I am writing ____ your invoice.','regarding','Regarding = concernant.'],
+['The manager ____ the request yesterday.','approved','Past simple : approved.'],
+['Could you ____ me the schedule?','send','Could you + base verb.'],
+['The flight was ____ by two hours.','delayed','Delayed = retardé.'],
+['We are ____ to hire a new assistant.','going','Be going to = futur prévu.'],
+['The documents are ____ the desk.','on','On = sur une surface.'],
+['She is ____ a presentation now.','giving','Present continuous : be + ing.'],
+['The item is not ____ in stores.','available','Available = disponible.'],
+['You ____ wear a badge in this building.','must','Must = obligation forte.'],
+['She ____ here since 2023.','has worked','Since + point de départ = present perfect.'],
+['They ____ the office last month.','moved','Last month = past simple.'],
+['I ____ preparing the report when he called.','was','Past continuous : was/were + -ing.'],
+['We are ____ to meet the supplier tomorrow.','going','Going to = plan futur.'],
+['The train ____ at 8 every morning.','leaves','Horaire/routine = présent simple.'],
+['The manager is ____ with a client now.','speaking','Now = present continuous.']
+];
+function renderFills(){const box=$('fills');box.innerHTML='';fills.forEach((f,i)=>{const c=document.createElement('article');c.className='fill-card';c.innerHTML='<span class="tag">'+(i+1)+'</span><h3>Complète</h3><p>'+f[0].replace('____','<input class="fill" data-a="'+f[1]+'">')+'</p><div class="hint answer-note"><b>Réponse :</b> '+f[1]+'. '+f[2]+'</div>';box.appendChild(c)})}
+function norm(s){return s.trim().toLowerCase().replaceAll('’',"'")}
+$('checkFills').addEventListener('click',()=>{document.querySelectorAll('.fill').forEach(inp=>{const ok=norm(inp.value)===norm(inp.dataset.a);inp.classList.toggle('correct',ok);inp.classList.toggle('wrong',!ok);inp.closest('.fill-card').querySelector('.answer-note').classList.add('show')})});
+$('resetFills').addEventListener('click',()=>{document.querySelectorAll('.fill').forEach(i=>{i.value='';i.classList.remove('correct','wrong')});document.querySelectorAll('.answer-note').forEach(n=>n.classList.remove('show'))});
+const quiz=[
+['He ____ to work by train every day.',['go','goes','going','gone'],1,'He/she/it prend -s au présent simple.'],
+['The meeting was postponed. Cela veut dire :',['annulée','reportée','confirmée','terminée'],1,'Postponed = reportée.'],
+['Please find attached... est une phrase de :',['restaurant','email professionnel','météo','sport'],1,'Très courant dans les emails TOEIC.'],
+['Available signifie :',['disponible','cher','en retard','cassé'],0,'Available = disponible.'],
+['A deadline is :',['une date limite','une facture','un badge','un client'],0,'Deadline = date limite.'],
+['We ____ discussing the budget now.',['is','are','do','have'],1,'We are + -ing.'],
+['Yesterday, they ____ the office.',['visit','visited','visiting','visits'],1,'Past simple régulier.'],
+['Could you please ____ the file?',['sending','send','sent','sends'],1,'Could you + base verb.'],
+['Invoice signifie :',['facture','vol','salle','réunion'],0,'Finance/business.'],
+['The hotel is downtown. Downtown =',['banlieue','centre-ville','aéroport','bureau'],1,'Downtown = centre-ville.'],
+['The customer requested a refund. Refund =',['remboursement','réunion','planning','présentation'],0,'Customer service.'],
+['At 9 a.m. utilise :',['in','on','at','to'],2,'At pour les heures.'],
+['On Monday utilise :',['in','on','at','for'],1,'On pour les jours.'],
+['In June utilise :',['in','on','at','by'],0,'In pour mois/années.'],
+['The report is more expensive / cheaper. C’est :',['comparatif','passé','futur','article'],0,'More ou -er.'],
+['She should check the file. Should =',['devrait','peut','doit absolument','a fait'],0,'Should = conseil.'],
+['The order has shipped. Order =',['commande','bureau','retard','message'],0,'Order = commande.'],
+['I would like to confirm... signifie :',['Je voudrais confirmer','Je refuse','Je suis perdu','Je vends'],0,'Bloc très utile.'],
+['Staff signifie :',['personnel','facture','vol','ordinateur'],0,'Staff = équipe/personnel.'],
+['The updated agenda is attached. Agenda =',['ordre du jour','magasin','retard','prix'],0,'Agenda en anglais = ordre du jour/programme.']
+,
+['She is responsible ____ training new employees.',['for','to','of','at'],0,'Responsible for.'],
+['The report was ____ by the assistant.',['prepare','prepared','preparing','prepares'],1,'Passif : was + participe passé.'],
+['He decided ____ the meeting.',['attend','attending','to attend','attended'],2,'Decide + to + verb.'],
+['Although the price is high, ____',['the quality is good','because quality','therefore good','and expensive'],0,'Although introduit une opposition.'],
+['The blue folder is ____.',['my','mine','me','I'],1,'Mine = le mien/la mienne.']
+];
+let qScore=0;function renderQuiz(){const box=$('quizBox');box.innerHTML='';quiz.forEach((q,i)=>{const card=document.createElement('article');card.className='quiz-card';card.innerHTML='<h3>'+(i+1)+'. '+q[0]+'</h3><div class="opts"></div><div class="explain">'+q[3]+'</div>';const opts=card.querySelector('.opts');q[1].forEach((op,j)=>{const d=document.createElement('div');d.className='option';d.textContent=op;d.addEventListener('click',()=>{if(card.classList.contains('revealed'))return;card.classList.add('revealed');if(j===q[2]){qScore++;d.classList.add('correct')}else{d.classList.add('incorrect');opts.children[q[2]].classList.add('correct')}$('score').textContent=qScore+' / '+quiz.length});opts.appendChild(d)});box.appendChild(card)})}
+const listenItems=[
+{type:'Announcement',text:'Attention please. The 9:30 train to London has been delayed by twenty minutes. Passengers should wait on platform four.',q:'What is delayed?',o:['A meeting','A train','A flight'],c:1,e:'The announcement says the 9:30 train has been delayed.'},
+{type:'Conversation',text:'Woman: Could you send me the updated price list? Man: Sure, I will email it before lunch.',q:'What will the man do?',o:['Call a client','Send a price list','Order lunch'],c:1,e:'He says he will email the updated price list.'},
+{type:'Office',text:'The staff meeting originally scheduled for Monday has been moved to Wednesday afternoon in conference room B.',q:'When is the meeting now?',o:['Monday morning','Wednesday afternoon','Friday evening'],c:1,e:'Moved to Wednesday afternoon.'},
+{type:'Customer service',text:'Your order has shipped and should arrive by Friday. If you have questions, please contact customer service.',q:'What is the message about?',o:['A job interview','A shipped order','A hotel reservation'],c:1,e:'Order has shipped.'},
+{type:'Phone message',text:'Hello, this is Maria from accounting. I am calling about invoice number 4582. Please call me back today.',q:'Why is Maria calling?',o:['About an invoice','About a flight','About a new office'],c:0,e:'She mentions invoice number 4582.'},
+{type:'Travel',text:'The shuttle bus to the convention center leaves every thirty minutes from the hotel entrance.',q:'Where does the shuttle leave from?',o:['The airport','The hotel entrance','The train station'],c:1,e:'From the hotel entrance.'},
+{type:'Workplace',text:'All employees must wear their identification badges while inside the building.',q:'What must employees wear?',o:['A uniform','Identification badges','Safety shoes'],c:1,e:'Must wear identification badges.'},
+{type:'Schedule',text:'Dr. Brown is not available this morning, but she can meet you tomorrow at two p.m.',q:'When can Dr. Brown meet?',o:['This morning','Tomorrow at 2 p.m.','Tonight'],c:1,e:'Tomorrow at two p.m.'}
+];
+const readingSets=[
+{title:'Email - Schedule change',text:'Subject: Schedule change\n\nDear Ms. Martin,\nThe training session originally scheduled for Tuesday morning has been postponed to Thursday at 2 p.m. Please confirm whether you are available at the new time. The updated agenda is attached.\n\nBest regards,\nJames Carter',qs:[
+['When is the new training session?',['Tuesday morning','Thursday at 2 p.m.','Friday afternoon'],1,'The email says postponed to Thursday at 2 p.m.'],
+['What does James ask Ms. Martin to confirm?',['Her availability','Her payment','Her hotel'],0,'Please confirm whether you are available.'],
+['What is attached?',['The invoice','The updated agenda','The boarding pass'],1,'The updated agenda is attached.']]},
+{title:'Notice - Office renovation',text:'The third-floor kitchen will be closed from June 12 to June 15 for renovation. Employees may use the kitchen on the second floor during this period. We apologize for the inconvenience.',qs:[
+['What will be closed?',['The third-floor kitchen','The parking area','The main entrance'],0,'The third-floor kitchen will be closed.'],
+['How long will it be closed?',['One day','Four days','Two weeks'],1,'From June 12 to June 15.'],
+['Where can employees go instead?',['Second-floor kitchen','Cafeteria downtown','Conference room B'],0,'They may use the kitchen on the second floor.']]},
+{title:'Advertisement - Job opening',text:'Brighton Electronics is looking for a part-time sales assistant. Applicants must have excellent communication skills and be available on weekends. Please submit your resume by July 1.',qs:[
+['What job is advertised?',['Sales assistant','Software engineer','Accountant'],0,'A part-time sales assistant.'],
+['What is required?',['Weekend availability','A driver’s license','International travel'],0,'Applicants must be available on weekends.'],
+['What should applicants submit?',['A receipt','A resume','An invoice'],1,'Submit your resume.']]}
+];
+const mini=[
+['Choose the best answer: The package ____ arrive tomorrow.',['should','yesterday','since'],0,'Should can express expectation.'],
+['Vocabulary: “refund” means...', ['remboursement','réunion','rapport'],0,'Refund = remboursement.'],
+['Grammar: She ____ here since 2022.',['worked','has worked','is working'],1,'Since + date = present perfect.'],
+['Workplace: “deadline” means...', ['date limite','badge','pause déjeuner'],0,'Deadline = date limite.'],
+['Email: “Please find attached” means...', ['veuillez trouver en pièce jointe','merci de venir','je suis absent'],0,'Classic email phrase.'],
+['Preposition: responsible ____ sales.',['for','on','at'],0,'Responsible for.']
+];
+let miniScore=0,miniTotal=0;
+function speak(text){if(!('speechSynthesis' in window)){alert('Audio non disponible sur ce navigateur.');return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.82;u.pitch=1;speechSynthesis.speak(u)}
+function addQuestion(card,q,opts,correct,explain,onAnswer){const optBox=document.createElement('div');card.appendChild(optBox);opts.forEach((op,j)=>{const d=document.createElement('div');d.className='option';d.textContent=op;d.addEventListener('click',()=>{if(card.classList.contains('revealed'))return;card.classList.add('revealed');if(j===correct){miniScore++;d.classList.add('correct')}else{d.classList.add('incorrect');optBox.children[correct].classList.add('correct')}const ex=document.createElement('div');ex.className='explain';ex.style.display='block';ex.textContent=explain;card.appendChild(ex);if(onAnswer)onAnswer();updateMiniScore()});optBox.appendChild(d)})}
+function updateMiniScore(){ $('miniScore').textContent=miniScore+' / '+miniTotal }
+function resetMiniScore(total){miniScore=0;miniTotal=total;updateMiniScore()}
+function renderListening(){resetMiniScore(listenItems.length);const box=$('listenBox');box.innerHTML='';listenItems.forEach((it,i)=>{const card=document.createElement('article');card.className='quiz-card listen-card';card.innerHTML='<span class="tag blue">Listening '+(i+1)+'</span><h3>'+it.type+'</h3><div class="audio-controls"><button class="btn speak-btn">Écouter</button><button class="btn showText">Voir le script</button></div><p class="audio-text">'+it.text+'</p><p><b>'+it.q+'</b></p>';card.querySelector('.speak-btn').addEventListener('click',()=>speak(it.text));card.querySelector('.showText').addEventListener('click',()=>{const p=card.querySelector('.audio-text');p.style.display=p.style.display==='block'?'none':'block'});addQuestion(card,it.q,it.o,it.c,it.e);box.appendChild(card)})}
+function renderReading(){const total=readingSets.reduce((s,r)=>s+r.qs.length,0);resetMiniScore(total);const box=$('readingBox');box.innerHTML='';readingSets.forEach((set,si)=>{const wrap=document.createElement('article');wrap.className='mini';wrap.innerHTML='<span class="tag orange">Reading '+(si+1)+'</span><h3>'+set.title+'</h3><div class="readbox">'+set.text.replaceAll('\n','<br>')+'</div>';set.qs.forEach((q,qi)=>{const card=document.createElement('div');card.className='quiz-card';card.innerHTML='<h3>'+(qi+1)+'. '+q[0]+'</h3>';addQuestion(card,q[0],q[1],q[2],q[3]);wrap.appendChild(card)});box.appendChild(wrap)})}
+function renderMini(){resetMiniScore(mini.length);const box=$('miniBox');box.innerHTML='';mini.forEach((q,i)=>{const card=document.createElement('div');card.className='quiz-card';card.innerHTML='<h3>'+(i+1)+'. '+q[0]+'</h3>';addQuestion(card,q[0],q[1],q[2],q[3]);box.appendChild(card)})}
+document.querySelectorAll('.toeic-tab').forEach(tab=>tab.addEventListener('click',()=>{document.querySelectorAll('.toeic-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');document.querySelectorAll('.toeic-part').forEach(p=>p.classList.remove('active'));$('toeic-'+tab.dataset.toeic).classList.add('active');if(tab.dataset.toeic==='listen')renderListening();if(tab.dataset.toeic==='reading')renderReading();if(tab.dataset.toeic==='mixed')renderMini()}));
+renderFills();renderQuiz();renderListening();renderReading();renderMini();document.querySelector('[data-toeic="listen"]').click();
+</script>
+</body>
+</html>
