@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16c26c48505731942ac6ac1f0265b189, type: 3}
+  m_Name: Arc_Bio
+  m_EditorClassIdentifier: 
+  displayName: Arc Bio
+  description: "Tirer une fl\xE8che en fait 3"
+  color: {r: 0.45, g: 0.9, b: 0.4, a: 1}
+  prefab: {fileID: 8384691805008285517, guid: 4a90a6212934ab2428612d02a20f5432, type: 3}
+  minSpeed: 5
+  maxSpeed: 30
+  maxDraw: 0.5
+  effectName: "Train\xE9e de feuille"
+  effectDescription: "Laisse une train\xE9e de spore et de feuilles derri\xE8re elle qui tombe doucement et disparait au bout de 5 secondes, pas trop voyante pour ne pas empecher le joueur de viser"
