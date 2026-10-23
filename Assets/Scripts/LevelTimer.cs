@@ -2,15 +2,15 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// Chrono du niveau (5 min par défaut). À zéro, la manche en cours s'arrête et la partie est finie
+/// Chrono du niveau (1 min 30 par défaut). À zéro, la manche en cours s'arrête et la partie est finie
 /// (ScoreManager.TimeUp) : il reste "Nouvelle partie" ou "Menu" sur le panneau des résultats.
 /// "Nouvelle partie" remet le chrono à 5 min.
 /// Les textes qui affichent le temps sont de vrais objets de la scène (montre au poignet gauche, panneau).
 /// </summary>
 public class LevelTimer : MonoBehaviour
 {
-    [Tooltip("Temps du niveau en secondes (300 = 5 min).")]
-    public float duration = 300f;
+    [Tooltip("Temps de la partie en secondes (90 = 1 min 30).")]
+    public float levelDuration = 90f;
 
     [Tooltip("Le chrono s'arrête entre deux manches (pendant qu'on lit le panneau).")]
     public bool pauseBetweenRounds = true;
@@ -34,14 +34,14 @@ public class LevelTimer : MonoBehaviour
 
     ScoreManager subscribedTo;
 
-    void Awake() => Remaining = duration;
+    void Awake() => Remaining = levelDuration;
 
     void OnDestroy()
     {
         if (subscribedTo != null) subscribedTo.OnGameReset -= ResetTimer;
     }
 
-    void ResetTimer() => Remaining = duration;
+    void ResetTimer() => Remaining = levelDuration;
 
     void Update()
     {

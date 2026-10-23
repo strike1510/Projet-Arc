@@ -15,4 +15,10 @@ public static class GameSettings
 
     /// <summary>Scène du menu, pour y revenir depuis un niveau (bouton "Menu").</summary>
     public static string MenuScene = "Open_World";
+
+    /// <summary>Scènes des niveaux, dans l'ordre (rempli par le menu). Sert au bouton "Niveau suivant".</summary>
+    public static string[] LevelScenes = { "Niveau1", "Niveau2", "Niveau3" };
+
+    /// <summary>Noms affichés des niveaux, dans l'ordre (rempli par le menu).</summary>
+    public static string[] LevelNames = { "Niveau 1", "Niveau 2", "Niveau 3" };
 }

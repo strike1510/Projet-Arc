@@ -80,6 +80,16 @@ public class MainMenu : MonoBehaviour
     void Start()
     {
         GameSettings.MenuScene = SceneManager.GetActiveScene().name;
+        // Ordre des niveaux pour le bouton "Niveau suivant" (case vide = scène "NiveauN" par défaut)
+        int count = Mathf.Max(levelScenes.Length, levelNames.Length);
+        GameSettings.LevelScenes = new string[count];
+        GameSettings.LevelNames = new string[count];
+        for (int i = 0; i < count; i++)
+        {
+            string sc = i < levelScenes.Length ? levelScenes[i] : "";
+            GameSettings.LevelScenes[i] = string.IsNullOrWhiteSpace(sc) ? $"Niveau{i + 1}" : sc;
+            GameSettings.LevelNames[i] = i < levelNames.Length && !string.IsNullOrWhiteSpace(levelNames[i]) ? levelNames[i] : $"Niveau {i + 1}";
+        }
         EnsureXRInput();
         WireKeyboard();
 
@@ -106,6 +116,12 @@ public class MainMenu : MonoBehaviour
     public void SelectLevel(int index)
     {
         Debug.Log($"[MainMenu] Clic sur le niveau {index + 1} (prénom : '{playerName}', scène : '{(index >= 0 && index < levelScenes.Length ? levelScenes[index] : "")}').");
+        if (!LevelProgress.IsUnlocked(index))
+        {
+            string prev = index - 1 < levelNames.Length && index >= 1 ? levelNames[index - 1] : $"Niveau {index}";
+            SetMessage($"Niveau verrouillé : termine d'abord {prev} (1 min 30) pour l'ouvrir.");
+            return;
+        }
         HighlightLevel(index);
         if (selectedLevel < 0) return;
 
@@ -168,6 +184,7 @@ public class MainMenu : MonoBehaviour
         string name = playerName.Trim();
         if (name.Length == 0) { SetMessage("Entre ton prénom d'abord !"); return; }
         if (selectedLevel < 0) { SetMessage("Choisis un niveau !"); return; }
+        if (!LevelProgress.IsUnlocked(selectedLevel)) { SetMessage("Ce niveau est encore verrouillé."); return; }
 
         string levelName = selectedLevel < levelNames.Length ? levelNames[selectedLevel] : $"Niveau {selectedLevel + 1}";
         string scene = selectedLevel < levelScenes.Length ? levelScenes[selectedLevel] : "";
@@ -202,6 +219,10 @@ public class MainMenu : MonoBehaviour
 
     public void RefreshLeaderboards()
     {
+        // Niveaux verrouillés : bouton grisé tant que le niveau d'avant n'a pas été fini
+        for (int i = 0; i < levelButtons.Length; i++)
+            if (levelButtons[i] != null) levelButtons[i].interactable = LevelProgress.IsUnlocked(i);
+
         // Nom de chaque niveau sur son bouton
         for (int level = 0; level < levelTitleTexts.Length; level++)
             if (levelTitleTexts[level] != null && level < levelNames.Length)
@@ -212,7 +233,9 @@ public class MainMenu : MonoBehaviour
         {
             if (levelRecordTexts[level] == null) continue;
             var top = Leaderboard.Get(level);
-            string record = top.Count > 0 ? string.Format(recordFormat, top[0].name, top[0].score) : noRecordText;
+            string record = !LevelProgress.IsUnlocked(level)
+                ? $"Verrouillé : finis le niveau {level}"
+                : top.Count > 0 ? string.Format(recordFormat, top[0].name, top[0].score) : noRecordText;
 
             // Le nom du niveau d'abord, le record en dessous — dans le même texte si le bouton n'en a qu'un
             var title = level < levelTitleTexts.Length ? levelTitleTexts[level] : null;
@@ -298,6 +321,14 @@ public class MainMenu : MonoBehaviour
         UnityEditor.EditorUtility.SetDirty(keysContainer);
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
 #endif
+    }
+
+    [ContextMenu("Réinitialiser la progression (seul le Niveau 1 ouvert)")]
+    void ResetProgress()
+    {
+        LevelProgress.Reset();
+        RefreshLeaderboards();
+        Debug.Log("[MainMenu] Progression remise à zéro.");
     }
 
     [ContextMenu("Effacer tous les classements")]

@@ -89,7 +89,40 @@ public class ResultsBoard : MonoBehaviour
 
     // ---------- Boutons ----------
 
-    public void NextRound() { if (ScoreManager.Instance != null && !ScoreManager.Instance.IsTimeUp) ScoreManager.Instance.StartNextRound(); }
+    /// <summary>
+    /// Bouton "Manche suivante". En mode chronométré, une fois le temps écoulé, il devient "Niveau suivant".
+    /// </summary>
+    public void NextRound()
+    {
+        var sm = ScoreManager.Instance;
+        if (sm == null) return;
+        if (sm.IsTimeUp) { LoadNextLevel(); return; }
+        sm.StartNextRound();
+    }
+
+    /// <summary>Scène du niveau qui suit celui-ci ("" s'il n'y en a pas).</summary>
+    static string NextLevelScene(int levelIndex)
+    {
+        int next = levelIndex + 1;
+        var scenes = GameSettings.LevelScenes;
+        if (scenes == null || next >= scenes.Length || string.IsNullOrWhiteSpace(scenes[next])) return "";
+        return Application.CanStreamedLevelBeLoaded(scenes[next]) ? scenes[next] : "";
+    }
+
+    /// <summary>Lance le niveau suivant (débloqué en finissant celui-ci).</summary>
+    public void LoadNextLevel()
+    {
+        var sm = ScoreManager.Instance;
+        if (sm == null) return;
+        int next = sm.LevelIndex + 1;
+        string scene = NextLevelScene(sm.LevelIndex);
+        if (scene == "" || !LevelProgress.IsUnlocked(next)) return;
+
+        sm.SubmitGame();
+        GameSettings.LevelIndex = next;
+        GameSettings.LevelName = GameSettings.LevelNames != null && next < GameSettings.LevelNames.Length ? GameSettings.LevelNames[next] : $"Niveau {next + 1}";
+        UnityEngine.SceneManagement.SceneManager.LoadScene(scene);
+    }
     public void NewGame() => ScoreManager.Instance?.ResetGame();
     public void BackToMenu() => ScoreManager.Instance?.BackToMenu();
 
@@ -109,7 +142,7 @@ public class ResultsBoard : MonoBehaviour
         if (totalText != null)
         {
             string total = string.Format(totalFormat, sm.TotalScore);
-            totalText.text = sm.IsRoundOver ? $"{total}  -  {PlaceText(sm.LevelIndex, sm.TotalScore)}" : total;
+            totalText.text = sm.IsRoundOver ? $"{total}  -  {PlaceText(sm.LevelIndex, sm.TotalScore, sm.GameSubmitted)}" : total;
         }
 
         if (endMessageText != null)
@@ -118,8 +151,10 @@ public class ResultsBoard : MonoBehaviour
             if (sm.IsRoundOver)
             {
                 endMessageText.color = endMessageColor;
+                string unlocked = sm.NextLevelJustUnlocked && NextLevelScene(sm.LevelIndex) != ""
+                    ? $"\n<size=55%>Niveau {sm.LevelIndex + 2} débloqué !</size>" : "";
                 endMessageText.text = sm.IsTimeUp
-                    ? $"Temps écoulé !\n<size=70%>Total : {sm.TotalScore} pts</size>"
+                    ? $"Temps écoulé !\n<size=70%>Score final : {sm.TotalScore} pts</size>{unlocked}"
                     : sm.TargetReached
                     ? $"Objectif atteint !\n<size=70%>Manche {sm.RoundNumber} : {sm.RoundScore} pts</size>"
                     : $"Manche {sm.RoundNumber} terminée\n<size=70%>{sm.RoundScore} pts</size>";
@@ -129,7 +164,9 @@ public class ResultsBoard : MonoBehaviour
         if (statusText != null)
         {
             if (sm.IsTimeUp)
-                statusText.text = "Temps écoulé : Nouvelle partie ou Menu";
+                statusText.text = NextLevelScene(sm.LevelIndex) != "" ? "Score figé : Niveau suivant, Nouvelle partie ou Menu" : "Score figé : Nouvelle partie ou Menu";
+            else if (sm.timedMode)
+                statusText.text = $"{sm.ArrowsShotThisRound} flèches tirées - fais le meilleur score avant la fin du chrono !";
             else if (sm.IsRoundOver)
                 statusText.text = sm.TargetReached ? $"Manche {sm.RoundNumber} : objectif atteint !" : $"Manche {sm.RoundNumber} terminée";
             else
@@ -144,22 +181,29 @@ public class ResultsBoard : MonoBehaviour
         if (endButtons != null)
         {
             endButtons.SetActive(sm.IsRoundOver);
-            // Temps écoulé : plus de "Manche suivante"
+            // Temps écoulé : "Manche suivante" devient "Niveau suivant" (s'il existe)
+            bool hasNext = sm.IsTimeUp && NextLevelScene(sm.LevelIndex) != "" && LevelProgress.IsUnlocked(sm.LevelIndex + 1);
             foreach (var b in endButtons.GetComponentsInChildren<Button>(true))
-                if (b.name.ToLower().Contains("suivante")) b.gameObject.SetActive(!sm.IsTimeUp);
+            {
+                if (!b.name.ToLower().Contains("suivante")) continue;
+                b.gameObject.SetActive(!sm.IsTimeUp || hasNext);
+                var label = b.GetComponentInChildren<TMP_Text>(true);
+                if (label != null) label.text = sm.IsTimeUp ? "Niveau suivant" : "Manche suivante";
+            }
         }
 
         RefreshRows(sm);
     }
 
     /// <summary>Place qu'aurait ce total dans le top 3 du niveau (sans l'enregistrer).</summary>
-    static string PlaceText(int level, int total)
+    static string PlaceText(int level, int total, bool alreadySaved)
     {
         var entries = Leaderboard.Get(level);
         int place = 0;
-        foreach (var e in entries) if (e.score >= total) place++;   // à égalité, l'ancien score reste devant
+        // Déjà enregistré : le score fait partie du classement, on compte seulement ceux devant lui
+        foreach (var e in entries) if (alreadySaved ? e.score > total : e.score >= total) place++;
         if (place < Leaderboard.Size) return place == 0 ? "1re place !" : $"{place + 1}e place";
-        return $"hors top {Leaderboard.Size} (3e : {entries[Leaderboard.Size - 1].score} pts)";
+        return entries.Count >= Leaderboard.Size ? $"hors top {Leaderboard.Size} (3e : {entries[Leaderboard.Size - 1].score} pts)" : $"{place + 1}e place";
     }
 
     /// <summary>Nom des lignes posées dans l'éditeur sous "Lignes" (une par manche affichée).</summary>
@@ -192,7 +236,7 @@ public class ResultsBoard : MonoBehaviour
             int r = first + i;
             if (row.roundLabel != null) row.roundLabel.text = string.Format(roundFormat, r + 1);
             if (row.scoreLabel != null) row.scoreLabel.text = string.Format(scoreFormat, sm.RoundScores[r]);
-            FillDots(row.dotsContainer, sm.ShotsOfRound(r), sm.arrowsPerRound);
+            FillDots(row.dotsContainer, sm.ShotsOfRound(r), sm.timedMode ? -1 : sm.arrowsPerRound);
         }
     }
 
@@ -200,15 +244,20 @@ public class ResultsBoard : MonoBehaviour
     {
         if (container == null) return;
 
-        // Les ronds sont posés dans la scène : on les colore, on cache ceux en trop
-        int i = 0;
+        // Les ronds sont posés dans la scène : on les colore, on cache ceux en trop.
+        // total < 0 (flèches illimitées) : tous les ronds servent, ils montrent les dernières flèches tirées.
+        var dots = new List<Image>();
         foreach (Transform child in container)
+            if (child.TryGetComponent(out Image dot)) dots.Add(dot);
+
+        int shown = total < 0 ? dots.Count : Mathf.Min(total, dots.Count);
+        int first = total < 0 ? Mathf.Max(0, shots.Count - dots.Count) : 0;
+        for (int i = 0; i < dots.Count; i++)
         {
-            if (!child.TryGetComponent(out Image dot)) continue;
-            bool used = i < total;
-            child.gameObject.SetActive(used);
-            if (used) dot.color = i < shots.Count ? ShotColor(shots[i]) : colorEmpty;
-            i++;
+            bool used = i < shown;
+            dots[i].gameObject.SetActive(used);
+            int s = first + i;
+            if (used) dots[i].color = s < shots.Count ? ShotColor(shots[s]) : colorEmpty;
         }
     }
 
