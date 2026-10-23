@@ -777,7 +777,7 @@ public static partial class ProjetArcSetup
         var go = new GameObject(TimerName);
         SceneManager.MoveGameObjectToScene(go, scene);
         var timer = go.AddComponent<LevelTimer>();
-        timer.duration = 300f;
+        timer.levelDuration = 90f;
         var displays = new List<TMP_Text>();
 
         // 1) Montre au poignet gauche
@@ -807,7 +807,7 @@ public static partial class ProjetArcSetup
                 var tmp = textGO.AddComponent<TextMeshPro>();
                 if (TMP_Settings.defaultFontAsset != null) tmp.font = TMP_Settings.defaultFontAsset;
                 tmp.rectTransform.sizeDelta = new Vector2(0.12f, 0.045f);
-                tmp.text = "5:00";
+                tmp.text = "1:30";
                 tmp.fontSize = 0.3f;
                 tmp.fontStyle = FontStyles.Bold;
                 tmp.alignment = TextAlignmentOptions.Center;
@@ -831,7 +831,7 @@ public static partial class ProjetArcSetup
             rt.anchoredPosition = new Vector2(0f, 10f);
             rt.sizeDelta = new Vector2(700f, 80f);
             var t = rt.gameObject.AddComponent<TextMeshProUGUI>();
-            t.text = "5:00";
+            t.text = "1:30";
             t.fontSize = 60;
             t.fontStyle = FontStyles.Bold;
             t.alignment = TextAlignmentOptions.Center;

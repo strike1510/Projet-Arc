@@ -12,7 +12,12 @@ public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager Instance { get; private set; }
 
-    [Header("Règles d'une manche")]
+    [Header("Mode chronométré")]
+    [Tooltip("Coché : flèches illimitées, la partie dure le temps du chrono (LevelTimer, 1 min 30) et s'arrête à zéro : " +
+             "le score est figé et le niveau suivant est débloqué. Décoché : ancien mode (flèches comptées, objectif de points).")]
+    public bool timedMode = true;
+
+    [Header("Règles d'une manche (mode non chronométré)")]
     [Tooltip("La manche s'arrête dès qu'on atteint ce score.")]
     public int targetScore = 150;
 
@@ -23,17 +28,23 @@ public class ScoreManager : MonoBehaviour
     [Tooltip("Niveau utilisé pour le classement quand on lance la scène sans passer par le menu (0 = Niveau 1).")]
     public int levelIndexIfNoMenu = 0;
 
-    [Header("Son de victoire")]
-    [Tooltip("Musique jouée quand le score cible est atteint.")]
-    public AudioClip victoryClip;
-    [Range(0f, 1f)] public float victoryVolume = 1f;
-    [Tooltip("Musique de fond à mettre en pause pendant la victoire (optionnel).")]
-    public AudioSource backgroundMusic;
-
     public string PlayerName => GameSettings.PlayerName;
 
     /// <summary>Niveau en cours (0 = Niveau 1), pour le classement.</summary>
-    public int LevelIndex => GameSettings.LevelIndex >= 0 ? GameSettings.LevelIndex : levelIndexIfNoMenu;
+    public int LevelIndex => GameSettings.LevelIndex >= 0 ? GameSettings.LevelIndex : LevelFromSceneName();
+
+    /// <summary>Lancé sans le menu : "Niveau3" → 2. Sinon levelIndexIfNoMenu.</summary>
+    int LevelFromSceneName()
+    {
+        string scene = gameObject.scene.name;
+        var digits = System.Text.RegularExpressions.Regex.Match(scene, @"\d+");
+        return digits.Success && int.TryParse(digits.Value, out int n) && n > 0 ? n - 1 : levelIndexIfNoMenu;
+    }
+
+    string ArrowsInfo => timedMode ? $"{ArrowsShotThisRound} flèches tirées" : $"flèches restantes : {ArrowsLeft}";
+
+    /// <summary>Vrai si la fin de cette partie vient de débloquer le niveau suivant.</summary>
+    public bool NextLevelJustUnlocked { get; private set; }
 
     /// <summary>Vrai quand le total de cette partie a déjà été envoyé au classement.</summary>
     public bool GameSubmitted { get; private set; }
@@ -56,7 +67,7 @@ public class ScoreManager : MonoBehaviour
     public int RoundScore => roundScores.Count > 0 ? roundScores[^1] : 0;
     public int TotalScore { get; private set; }
     public int ArrowsShotThisRound { get; private set; }
-    public int ArrowsLeft => Mathf.Max(0, arrowsPerRound - ArrowsShotThisRound);
+    public int ArrowsLeft => timedMode ? int.MaxValue : Mathf.Max(0, arrowsPerRound - ArrowsShotThisRound);
     public bool IsRoundOver { get; private set; }
     public int RoundStartFrame { get; private set; }   // frame où la manche a commencé
     public bool TargetReached => RoundScore >= targetScore;
@@ -84,7 +95,6 @@ public class ScoreManager : MonoBehaviour
     readonly List<int> roundScores = new();
     readonly List<List<Shot>> roundShots = new();
     int arrowsInFlight;
-    AudioSource sfx;   // lecteur du son de victoire
 
     void Awake()
     {
@@ -95,10 +105,6 @@ public class ScoreManager : MonoBehaviour
             return;
         }
         Instance = this;
-
-        sfx = gameObject.AddComponent<AudioSource>();
-        sfx.playOnAwake = false;
-        sfx.spatialBlend = 0f;   // 2D : s'entend partout
     }
 
     void Start() => StartNextRound();
@@ -118,11 +124,6 @@ public class ScoreManager : MonoBehaviour
             Debug.Log("[Score] Temps écoulé : pas de nouvelle manche (Nouvelle partie pour recommencer).");
             return;
         }
-
-        // Arrête la musique de victoire et relance la musique de fond
-        if (sfx != null) sfx.Stop();
-        if (backgroundMusic != null) backgroundMusic.UnPause();
-
         roundScores.Add(0);
         roundShots.Add(new List<Shot>());
         ArrowsShotThisRound = 0;
@@ -130,7 +131,7 @@ public class ScoreManager : MonoBehaviour
         IsRoundOver = false;
         RoundStartFrame = Time.frameCount;
 
-        Debug.Log($"[Score] Manche {RoundNumber} : {arrowsPerRound} flèches, objectif {targetScore} pts");
+        Debug.Log(timedMode ? "[Score] Partie lancée : flèches illimitées, fais le meilleur score avant la fin du chrono." : $"[Score] Manche {RoundNumber} : {arrowsPerRound} flèches, objectif {targetScore} pts");
         OnRoundStarted?.Invoke(RoundNumber);
         OnScoreChanged?.Invoke();
     }
@@ -142,23 +143,13 @@ public class ScoreManager : MonoBehaviour
 
         string reason = IsTimeUp ? "temps écoulé" : TargetReached ? "objectif atteint" : "plus de flèches";
         Debug.Log($"[Score] Fin de la manche {RoundNumber} ({reason}) : {RoundScore} pts");
-
-        // Victoire : le score cible est atteint
-        if (TargetReached) PlayVictory();
-
         OnRoundEnded?.Invoke(RoundNumber, RoundScore);
         OnScoreChanged?.Invoke();
     }
 
-    void PlayVictory()
-    {
-        if (victoryClip == null) return;
-        if (backgroundMusic != null) backgroundMusic.Pause();
-        sfx.PlayOneShot(victoryClip, victoryVolume);
-    }
-
     void CheckEndOfRound()
     {
+        if (timedMode) return;   // mode chronométré : seule la fin du chrono arrête la partie
         if (TargetReached) EndRound();
         else if (ArrowsLeft == 0 && arrowsInFlight == 0) EndRound();
     }
@@ -170,7 +161,11 @@ public class ScoreManager : MonoBehaviour
     {
         if (IsTimeUp) return;
         IsTimeUp = true;
-        Debug.Log($"[Score] Temps écoulé ! Total : {TotalScore} pts");
+        Debug.Log($"[Score] Temps écoulé ! Score final : {TotalScore} pts");
+
+        // Score figé : enregistré au classement, et le niveau suivant s'ouvre
+        SubmitGame();
+        NextLevelJustUnlocked = LevelProgress.Unlock(LevelIndex + 1);
         OnTimeUp?.Invoke();
         if (!IsRoundOver) EndRound();
         else OnScoreChanged?.Invoke();
@@ -187,7 +182,7 @@ public class ScoreManager : MonoBehaviour
     /// <summary>Une flèche part. Renvoie false si la manche est finie (le tir ne compte pas).</summary>
     public bool RegisterShot()
     {
-        if (IsRoundOver || ArrowsLeft == 0) return false;
+        if (IsRoundOver || (!timedMode && ArrowsLeft == 0)) return false;
 
         ArrowsShotThisRound++;
         ArrowsShot++;
@@ -213,7 +208,7 @@ public class ScoreManager : MonoBehaviour
         roundScores[^1] += points;
         TotalScore += points;
 
-        Debug.Log($"[Score] {PlayerName} : +{points} → {RoundScore}/{targetScore} pts (flèches restantes : {ArrowsLeft})");
+        Debug.Log($"[Score] {PlayerName} : +{points} → {RoundScore} pts ({ArrowsInfo})");
         OnScoreChanged?.Invoke();
         CheckEndOfRound();
     }
@@ -227,7 +222,7 @@ public class ScoreManager : MonoBehaviour
         if (bonus) { CheckEndOfRound(); return; }   // flèche bonus ratée : rien à afficher
         roundShots[^1].Add(new Shot { miss = true });
 
-        Debug.Log($"[Score] Raté → {RoundScore}/{targetScore} pts (flèches restantes : {ArrowsLeft})");
+        Debug.Log($"[Score] Raté → {RoundScore} pts ({ArrowsInfo})");
         OnScoreChanged?.Invoke();
         CheckEndOfRound();
     }
@@ -259,6 +254,7 @@ public class ScoreManager : MonoBehaviour
         SubmitGame();
         GameSubmitted = false;
         IsTimeUp = false;
+        NextLevelJustUnlocked = false;
         IsRoundOver = false;
         OnGameReset?.Invoke();
         roundScores.Clear();
