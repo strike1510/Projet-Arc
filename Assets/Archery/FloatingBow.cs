@@ -28,7 +28,7 @@ public class FloatingBow : MonoBehaviour
 
     [Header("Flotter à côté du joueur")]
     [Tooltip("Position par rapport à la tête : X = droite, Y = haut, Z = devant.")]
-    public Vector3 sideOffset = new Vector3(0.35f, -0.5f, 0.2f);
+    public Vector3 sideOffset = new Vector3(0.3f, -0.25f, 0.45f);
 
     [Tooltip("Temps de rattrapage quand le joueur se déplace (s).")]
     public float followSmooth = 0.25f;
