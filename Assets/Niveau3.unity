@@ -79991,9 +79991,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5817706056773804301, guid: e6262a02076c7c34689ab03e8de9e652, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3275171646916246893}
-    - targetCorrespondingSourceObject: {fileID: 5817706056773804301, guid: e6262a02076c7c34689ab03e8de9e652, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 3275171646916246897}
   m_SourcePrefab: {fileID: 100100000, guid: e6262a02076c7c34689ab03e8de9e652, type: 3}
 --- !u!1 &3275171646916246890 stripped
 GameObject:
@@ -80065,60 +80062,6 @@ MonoBehaviour:
     m_NumAlphaKeys: 3
   defaultWidth: 0.06
   defaultTime: 0.5
---- !u!114 &3275171646916246897
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3275171646916246890}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b00cdfd3c36baf244978c08f42e0ceac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BowController
-  arrowNock: {fileID: 0}
-  nockDistance: 0.15
-  maxDraw: 0.5
-  minSpeed: 5
-  maxSpeed: 30
-  trailColors:
-    serializedVersion: 2
-    key0: {r: 1, g: 1, b: 1, a: 1}
-    key1: {r: 1, g: 1, b: 1, a: 1}
-    key2: {r: 0, g: 0, b: 0, a: 0}
-    key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 0, g: 0, b: 0, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 65535
-    ctime2: 0
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: -1
-    m_NumColorKeys: 2
-    m_NumAlphaKeys: 2
-  trailWidth: 0.04
-  trailTime: 0.4
-  trailFlicker: 0
-  trailMaterial: {fileID: 0}
-  trailSparks: 0
-  noGravity: 0
-  nockedArrow: {fileID: 0}
 --- !u!1001 &6392732786796675151
 PrefabInstance:
   m_ObjectHideFlags: 0

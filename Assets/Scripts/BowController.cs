@@ -48,6 +48,16 @@ public class BowController : MonoBehaviour
         }
     }
 
-    void OnEnable() { All.Add(this); }
+    void OnEnable()
+    {
+        // Un BowController sans encoche (ex. ajouté par erreur sur une flèche) n'est pas un arc :
+        // sinon chaque flèche planterait en cherchant où s'encocher et les autres arcs ne marcheraient plus.
+        if (arrowNock == null)
+        {
+            Debug.LogWarning($"[Bow] '{name}' a un BowController sans Arrow Nock : ignoré.", this);
+            return;
+        }
+        All.Add(this);
+    }
     void OnDisable() { All.Remove(this); }
 }
